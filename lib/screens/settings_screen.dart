@@ -62,9 +62,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Translated texts based on the selected language.
+    final String settingsTitle =
+    _selectedLanguage == 'sv' ? 'Inställningar' : 'Settings';
+    final String languageLabel =
+    _selectedLanguage == 'sv' ? 'Språk' : 'Language';
+    final String gameModeLabel =
+    _selectedLanguage == 'sv' ? 'Speltyp' : 'Game Mode';
+    final String letterOrderLabel =
+    _selectedLanguage == 'sv' ? 'Bokstavsordning' : 'Letter Order';
+
+    final String englishText = _selectedLanguage == 'sv'
+        ? 'Engelska'
+        : 'English';
+    final String swedishText = _selectedLanguage == 'sv'
+        ? 'Svenska'
+        : 'Swedish';
+    final String uppercaseText = _selectedLanguage == 'sv'
+        ? 'Endast versaler'
+        : 'Only Uppercase';
+    final String lowercaseText = _selectedLanguage == 'sv'
+        ? 'Endast gemener'
+        : 'Only Lowercase';
+    final String randomText = _selectedLanguage == 'sv' ? 'Slumpmässigt' : 'Random';
+    final String alphabeticText =
+    _selectedLanguage == 'sv' ? 'Alfabetisk ordning' : 'Alphabetic Order';
+    final String randomOrderText =
+    _selectedLanguage == 'sv' ? 'Slumpmässig ordning' : 'Random Order';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: Text(settingsTitle),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
@@ -74,18 +102,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Language Setting
-            Text('Language', style: TextStyle(fontSize: 18)),
+            Text(languageLabel, style: TextStyle(fontSize: 18)),
             SizedBox(height: 8),
             DropdownButton<String>(
               value: _selectedLanguage,
               items: [
                 DropdownMenuItem(
                   value: 'en',
-                  child: Text('English'),
+                  child: Text(englishText),
                 ),
                 DropdownMenuItem(
                   value: 'sv',
-                  child: Text('Swedish'),
+                  child: Text(swedishText),
                 ),
               ],
               onChanged: _updateLanguage,
@@ -93,22 +121,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             SizedBox(height: 16),
 
             // Game Mode Setting
-            Text('Game Mode', style: TextStyle(fontSize: 18)),
+            Text(gameModeLabel, style: TextStyle(fontSize: 18)),
             SizedBox(height: 8),
             DropdownButton<String>(
               value: _selectedGameMode,
               items: [
                 DropdownMenuItem(
                   value: 'uppercase',
-                  child: Text('Only Uppercase'),
+                  child: Text(uppercaseText),
                 ),
                 DropdownMenuItem(
                   value: 'lowercase',
-                  child: Text('Only Lowercase'),
+                  child: Text(lowercaseText),
                 ),
                 DropdownMenuItem(
                   value: 'random',
-                  child: Text('Random'),
+                  child: Text(randomText),
                 ),
               ],
               onChanged: _updateGameMode,
@@ -116,18 +144,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             SizedBox(height: 16),
 
             // Letter Order Setting
-            Text('Letter Order', style: TextStyle(fontSize: 18)),
+            Text(letterOrderLabel, style: TextStyle(fontSize: 18)),
             SizedBox(height: 8),
             DropdownButton<String>(
               value: _selectedLetterOrder,
               items: [
                 DropdownMenuItem(
                   value: 'alphabetic',
-                  child: Text('Alphabetic Order'),
+                  child: Text(alphabeticText),
                 ),
                 DropdownMenuItem(
                   value: 'random',
-                  child: Text('Random Order'),
+                  child: Text(randomOrderText),
                 ),
               ],
               onChanged: _updateLetterOrder,

@@ -8,94 +8,65 @@ import '../services/settings_service.dart';
 /// Each letter is associated with one or more StrokeCheckpoints objects (one per stroke).
 final Map<String, List<StrokeCheckpoints>> letterStrokePaths = {
   'A': [
+    // Uppercase A: Stroke 1 (left leg).
     StrokeCheckpoints(
-      start: Offset(150, 55),
-      inBetween: [Offset(136.0, 92.5), Offset(121.2, 130.9), Offset(106.3, 169.3), Offset(91.5, 207.7)],
-      end: Offset(77, 243),
+      start: Offset(150, 50),
+      inBetween: [
+        Offset(138.2, 83.4),
+        Offset(125.3, 117.8),
+        Offset(112.4, 152.3),
+        Offset(99.4, 186.8),
+        Offset(86.5, 221.3)
+      ],
+      end: Offset(74, 255),
     ),
+    // Uppercase A: Stroke 2 (right leg).
     StrokeCheckpoints(
-      start: Offset(150, 55),
-      inBetween: [Offset(165.8, 92.5), Offset(180.7, 130.9), Offset(195.7, 169.3), Offset(210.6, 207.7)],
-      end: Offset(222, 243),
+      start: Offset(150, 50),
+      inBetween: [
+        Offset(164.5, 83.2),
+        Offset(177.1, 117.6),
+        Offset(189.7, 151.9),
+        Offset(202.3, 186.3),
+        Offset(214.9, 220.6)
+      ],
+      end: Offset(226, 255),
     ),
+    // Uppercase A: Stroke 3 (crossbar).
     StrokeCheckpoints(
       start: Offset(97, 196),
-      inBetween: [Offset(131.4, 196.6), Offset(167.8, 196.4)],
+      inBetween: [Offset(134.9, 196.9), Offset(173.1, 196.9)],
       end: Offset(207, 196),
     ),
   ],
   'a': [
+    // Lowercase a: Stroke 1 (the curved part of the loop).
     StrokeCheckpoints(
       start: Offset(213, 143),
-      inBetween: [Offset(192.3, 123.1), Offset(167.5, 107.5), Offset(135.6, 101.4), Offset(105.9, 112.1), Offset(85.6, 131.9), Offset(76.7, 161.5), Offset(76.7, 196.7), Offset(94.0, 221.4), Offset(114.8, 241.7), Offset(146.2, 246.6), Offset(174.7, 238.1), Offset(198.0, 219.8)],
+      inBetween: [
+        Offset(191.7, 118.6),
+        Offset(160.7, 106.9),
+        Offset(124.6, 105.8),
+        Offset(96.8, 120.2),
+        Offset(76.1, 144.5),
+        Offset(69.7, 178.5),
+        Offset(83.6, 207.4),
+        Offset(103.8, 231.4),
+        Offset(131.6, 246.1),
+        Offset(167.0, 242.2),
+        Offset(194.4, 224.5)
+      ],
       end: Offset(213, 200),
     ),
+    // Lowercase a: Stroke 2 (the vertical leg).
     StrokeCheckpoints(
-      start: Offset(213, 100),
-      inBetween: [Offset(213, 137.0), Offset(213, 172.3), Offset(213, 207.7)],
-      end: Offset(213, 246),
-    ),
-  ],
-  'B': [
-    StrokeCheckpoints(
-      start: Offset(95, 58),
-      inBetween: [Offset(95, 95.3), Offset(95, 132.2), Offset(95, 169.1), Offset(95, 206.1)],
-      end: Offset(95, 242),
-    ),
-    StrokeCheckpoints(
-      start: Offset(95, 58),
-      inBetween: [Offset(132.4, 57.8), Offset(171.1, 58.3), Offset(199.3, 74.6), Offset(212.5, 103.5), Offset(196.1, 132.0), Offset(168.0, 146.4), Offset(130.5, 148.9)],
-      end: Offset(95, 147),
-    ),
-    StrokeCheckpoints(
-      start: Offset(161, 147),
-      inBetween: [Offset(185.1, 157.3), Offset(207.8, 177.1), Offset(211.4, 209.9), Offset(192.7, 232.0), Offset(164.3, 243.0), Offset(130.9, 246.1)],
-      end: Offset(95, 242),
-    ),
-  ],
-  'b': [
-    StrokeCheckpoints(
-      start: Offset(84, 44),
-      inBetween: [Offset(84, 86.1), Offset(84, 125.4), Offset(84, 164.6), Offset(84, 203.8)],
-      end: Offset(84, 242),
-    ),
-    StrokeCheckpoints(
-      start: Offset(84, 144),
-      inBetween: [Offset(102.9, 127.0), Offset(128.3, 110.0), Offset(156.8, 101.6), Offset(187.7, 107.9), Offset(211.3, 124.8), Offset(220.8, 154.9), Offset(221.9, 187.5), Offset(206.5, 214.0), Offset(185.8, 235.3), Offset(156.3, 244.1), Offset(125.5, 238.8), Offset(105.9, 218.9)],
-      end: Offset(84, 206),
-    ),
-  ],
-  'C': [
-    StrokeCheckpoints(
-      start: Offset(227, 95),
-      inBetween: [Offset(205.0, 74.2), Offset(176.9, 63.9), Offset(143.1, 59.4), Offset(109.2, 64.1), Offset(85.4, 82.1), Offset(65.9, 105.6), Offset(60.6, 138.2), Offset(56.9, 171.0), Offset(71.4, 197.4), Offset(89.4, 222.6), Offset(117.1, 236.6), Offset(148.9, 243.3), Offset(182.2, 239.7), Offset(209.3, 225.8)],
-      end: Offset(227, 204),
-    ),
-  ],
-  'c': [
-    StrokeCheckpoints(
-      start: Offset(212, 135),
-      inBetween: [Offset(188.6, 111.3), Offset(156.9, 104.2), Offset(125.0, 109.4), Offset(99.2, 129.1), Offset(88.3, 159.3), Offset(89.2, 193.5), Offset(105.0, 221.9), Offset(130.8, 237.7), Offset(163.7, 245.0), Offset(193.4, 234.1)],
-      end: Offset(212, 211),
-    ),
-  ],
-  'D': [
-    StrokeCheckpoints(
-      start: Offset(80, 57),
-      inBetween: [Offset(80, 95.1), Offset(80, 130.8), Offset(80, 166.4), Offset(80, 202.1)],
-      end: Offset(80, 242),
-    ),
-    StrokeCheckpoints(
-      start: Offset(80, 57),
-      inBetween: [Offset(114.4, 53.6), Offset(150.1, 57.2), Offset(179.9, 70.5), Offset(207.0, 89.6), Offset(222.2, 117.7), Offset(227.8, 151.8), Offset(225.8, 188.1), Offset(206.8, 214.8), Offset(180.5, 232.2), Offset(150.0, 243.3), Offset(113.7, 246.1)],
-      end: Offset(80, 242),
-    ),
-  ],
-  '#': [
-    StrokeCheckpoints(
-      start: Offset(0, 0),
-      inBetween: [],
-      end: Offset(0, 0),
+      start: Offset(213, 93),
+      inBetween: [
+        Offset(214.8, 131.4),
+        Offset(215.4, 171.4),
+        Offset(216.0, 211.4)
+      ],
+      end: Offset(213, 255),
     ),
   ],
   // Add additional letters here...
@@ -117,7 +88,6 @@ class _GameplayScreenState extends State<GameplayScreen>
   int _currentLetterIndex = 0;
   String? letter; // Current letter to trace.
   String _language = "en"; // default language
-  bool _highscoreTriggered = false;
 
   // Tracing variables.
   List<Offset> _userStroke = [];
@@ -126,9 +96,8 @@ class _GameplayScreenState extends State<GameplayScreen>
   late List<StrokeCheckpoints> strokeCheckpointsList;
 
   // Scoring.
-  int _score = 100;
+  int _score = 10;
   final int _letterBonus = 10; // Points awarded per correctly drawn letter.
-  final int _letterPenalty = 2; // Points deducted for incorrect stroke.
 
   // Help state.
   bool _showHelp = false;
@@ -190,7 +159,7 @@ class _GameplayScreenState extends State<GameplayScreen>
       _currentLetterIndex = 0;
       letter = _letters[_currentLetterIndex];
       // For testing only, override letter:
-      letter = "D";
+      letter = "a";
       strokeCheckpointsList = letterStrokePaths[letter!] ?? [];
       _language = language; // Store language for later use.
     });
@@ -240,38 +209,6 @@ class _GameplayScreenState extends State<GameplayScreen>
     }
   }
 
-  /// Checks and updates the high score if the current score is greater.
-  Future<void> _updateHighScore() async {
-    int currentHighScore = await _settingsService.getHighScore();
-    if (_score > currentHighScore) {
-      await _settingsService.setHighScore(_score);
-      // Trigger the event only once per session.
-      if (!_highscoreTriggered) {
-        _highscoreTriggered = true;
-        _triggerHighScoreEvent();
-      }
-    }
-  }
-
-  void _triggerHighScoreEvent() {
-    // For example, show a dialog or play a sound.
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(_language == "sv" ? "Nytt rekord!" : "New High Score!"),
-        content: Text(_language == "sv"
-            ? "Grattis! Du har satt ett nytt rekord."
-            : "Congratulations! You've set a new high score."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(_language == "sv" ? "OK" : "OK"),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading || letter == null) {
@@ -311,7 +248,6 @@ class _GameplayScreenState extends State<GameplayScreen>
         return GestureDetector(
           onPanStart: (details) {
             Offset designPos = (details.localPosition - Offset(dx, dy)) / scale;
-            print("Offset: $designPos");
             setState(() {
               _userStroke = [designPos];
             });
@@ -338,19 +274,15 @@ class _GameplayScreenState extends State<GameplayScreen>
               if (valid) {
                 _completedStrokes.add(List.from(_userStroke));
                 currentStrokeIndex++;
-                // If all strokes for this letter are completed, award bonus points,
-                // update high score if necessary, and move to next letter.
+                // If all strokes for this letter are completed, award bonus points and move to next letter.
                 if (currentStrokeIndex == strokeCheckpointsList.length) {
                   setState(() {
                     _score += _letterBonus;
-                    //TODO: Animation, fireworks, sound and +10
                   });
-                  _updateHighScore(); // Update the high score.
+                  //Timer(Duration(milliseconds: 500), _nextLetter);
+                  //TODO: SOUND AND STARS?
                   _nextLetter();
                 }
-              } else {
-                _score -= _letterPenalty;
-                //TODO: Animation, -2 on screen, red and negative sound
               }
             }
             setState(() {

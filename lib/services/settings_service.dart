@@ -4,6 +4,7 @@ class SettingsService {
   static const String _languageKey = 'language';
   static const String _gameModeKey = 'gameMode';
   static const String _letterOrderKey = 'letterOrder';
+  static const String _highScoreKey = 'highScore';
 
   // Retrieves the language setting. Defaults to 'en' (English).
   Future<String> getLanguage() async {
@@ -40,4 +41,23 @@ class SettingsService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_letterOrderKey, letterOrder);
   }
+
+  // Retrieves the high score. Defaults to 0.
+  Future<int> getHighScore() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_highScoreKey) ?? 0;
+  }
+
+  // Resets the high score to 0.
+  Future<void> resetHighScore() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_highScoreKey, 0);
+  }
+
+  // Sets the high score.
+  Future<void> setHighScore(int highScore) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_highScoreKey, highScore);
+  }
+
 }
