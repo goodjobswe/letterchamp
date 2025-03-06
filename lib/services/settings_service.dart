@@ -5,59 +5,84 @@ class SettingsService {
   static const String _gameModeKey = 'gameMode';
   static const String _letterOrderKey = 'letterOrder';
   static const String _highScoreKey = 'highScore';
+  static const String _highestStreakKey = 'highestStreak'; // New key
 
-  // Retrieves the language setting. Defaults to 'en' (English).
+  SharedPreferences? _prefs;
+
+  /// Initializes the SharedPreferences instance.
+  Future<void> init() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  /// Retrieves the language setting. Defaults to 'en' (English).
   Future<String> getLanguage() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_languageKey) ?? 'en';
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!.getString(_languageKey) ?? 'en';
   }
 
-  // Sets the language setting.
+  /// Sets the language setting.
   Future<void> setLanguage(String language) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_languageKey, language);
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setString(_languageKey, language);
   }
 
-  // Retrieves the game mode. Defaults to 'random'.
+  /// Retrieves the game mode. Defaults to 'random'.
   Future<String> getGameMode() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_gameModeKey) ?? 'random';
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!.getString(_gameModeKey) ?? 'random';
   }
 
-  // Sets the game mode.
+  /// Sets the game mode.
   Future<void> setGameMode(String gameMode) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_gameModeKey, gameMode);
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setString(_gameModeKey, gameMode);
   }
 
-  // Retrieves the letter order. Defaults to 'alphabetic'.
+  /// Retrieves the letter order. Defaults to 'alphabetic'.
   Future<String> getLetterOrder() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_letterOrderKey) ?? 'alphabetic';
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!.getString(_letterOrderKey) ?? 'random';
   }
 
-  // Sets the letter order.
+  /// Sets the letter order.
   Future<void> setLetterOrder(String letterOrder) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_letterOrderKey, letterOrder);
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setString(_letterOrderKey, letterOrder);
   }
 
-  // Retrieves the high score. Defaults to 0.
+  /// Retrieves the high score. Defaults to 0.
   Future<int> getHighScore() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_highScoreKey) ?? 0;
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!.getInt(_highScoreKey) ?? 0;
   }
 
-  // Resets the high score to 0.
-  Future<void> resetHighScore() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_highScoreKey, 0);
-  }
-
-  // Sets the high score.
+  /// Sets the high score.
   Future<void> setHighScore(int highScore) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_highScoreKey, highScore);
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setInt(_highScoreKey, highScore);
   }
 
+  /// Resets the high score to 0.
+  Future<void> resetHighScore() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setInt(_highScoreKey, 0);
+  }
+
+  /// Retrieves the highest streak. Defaults to 0.
+  Future<int> getHighestStreak() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!.getInt(_highestStreakKey) ?? 0;
+  }
+
+  /// Sets the highest streak.
+  Future<void> setHighestStreak(int streak) async {
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setInt(_highestStreakKey, streak);
+  }
+
+  /// Resets the highest streak to 0.
+  Future<void> resetHighestStreak() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setInt(_highestStreakKey, 0);
+  }
 }

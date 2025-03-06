@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/settings_service.dart';
 
 class LandingScreen extends StatefulWidget {
-  const LandingScreen({Key? key}) : super(key: key);
+  const LandingScreen({super.key});
 
   @override
-  _LandingScreenState createState() => _LandingScreenState();
+  LandingScreenState createState() => LandingScreenState();
 }
 
-class _LandingScreenState extends State<LandingScreen> {
-  String _language = "en"; // default language
+class LandingScreenState extends State<LandingScreen> {
+  String _language = "en";
   bool _isLoading = true;
-  // Settings service.
-  final SettingsService _settingsService = SettingsService();
+  final SettingsService settingsService = SettingsService();
 
   @override
   void initState() {
@@ -21,7 +21,8 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 
   Future<void> _loadLanguage() async {
-    final language = await _settingsService.getLanguage();
+    await settingsService.init();
+    final language = await settingsService.getLanguage();
 
     setState(() {
       _language = language;
@@ -29,62 +30,196 @@ class _LandingScreenState extends State<LandingScreen> {
     });
   }
 
+  Widget _buildGameButton(BuildContext context, String text, String route) {
+    return ElevatedButton(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.all(Colors.transparent),
+        elevation: WidgetStateProperty.all(0),
+        padding: WidgetStateProperty.all(EdgeInsets.zero),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+      onPressed: () => Navigator.pushNamed(context, route),
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xfff45d27), Color(0xfff5851f)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black45,
+              blurRadius: 5,
+              offset: Offset(3, 3),
+            ),
+          ],
+        ),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 150, minHeight: 50),
+          alignment: Alignment.center,
+          child: Text(
+            text,
+            style: GoogleFonts.pressStart2p(
+              textStyle: const TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGameButtonSecondary(BuildContext context, String text, String route) {
+    return ElevatedButton(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.all(Colors.transparent),
+        elevation: WidgetStateProperty.all(0),
+        padding: WidgetStateProperty.all(EdgeInsets.zero),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            //side: BorderSide(color: Colors.grey.shade400, width: 2),
+          ),
+        ),
+      ),
+      onPressed: () => Navigator.pushNamed(context, route),
+      child: Ink(
+        decoration: BoxDecoration(
+          color: Colors.grey.shade300, // Use a solid, neutral background.
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 150, minHeight: 50),
+          alignment: Alignment.center,
+          child: Text(
+            text,
+            style: GoogleFonts.pressStart2p(
+              textStyle: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: Text("Loading"),
+          title: const Text("Loading"),
         ),
-        body: Center(child: CircularProgressIndicator()),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    // Set the text based on the language setting.
-    final welcomeTitle = _language == "sv" ? "Välkommen" : "Welcome";
+    final welcomeTitle = _language == "sv" ? "Letter Champ" : "Letter Champ";
     final welcomeText = _language == "sv"
-        ? "Välkommen till Letter Drawing App!"
-        : "Welcome to the Letter Drawing App!";
-    final startDrawingText = _language == "sv" ? "Börja rita" : "Start Drawing";
-    final settingsText = _language == "sv" ? "Inställningar" : "Settings";
-    final highScoresText = _language == "sv" ? "Högsta poäng" : "High Scores";
+        ? "Hej! Är du redo att bemästra alla bokstäver?"
+        : "Hey! Are you ready to master all the letters?";
+    final startDrawingText =
+    _language == "sv" ? "Spela Nu" : "Play Now";
+    final settingsText =
+    _language == "sv" ? "Inställningar" : "Settings";
+    final highScoresText =
+    _language == "sv" ? "Högsta Poäng" : "High Scores";
+    final instructionsText =
+    _language == "sv" ? "Instruktioner" : "Instructions";
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(welcomeTitle),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              welcomeText,
-              style: TextStyle(fontSize: 20),
-              textAlign: TextAlign.center,
+      body: Stack(
+        children: [
+          // Background image.
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/game_bg.png'),
+                fit: BoxFit.cover,
+              ),
             ),
-            SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/gameplay');
-              },
-              child: Text(startDrawingText),
+          ),
+          // Dark overlay.
+          Container(
+            color: Color.fromRGBO(0, 0, 0, 0.4),
+          ),
+          // Content.
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Column(
+                children: [
+                  // Custom transparent AppBar.
+                  AppBar(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    centerTitle: true,
+                    title: Text(
+                      welcomeTitle,
+                      style: GoogleFonts.pressStart2p(
+                        textStyle: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          // Welcome text.
+                          Text(
+                            welcomeText,
+                            style: GoogleFonts.pressStart2p(
+                              textStyle: const TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    blurRadius: 10,
+                                    color: Colors.black,
+                                    offset: Offset(2, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 20),
+                          // Game character image.
+                          Image.asset(
+                            'assets/images/game_character.png',
+                            width: 200,
+                            height: 200,
+                            fit: BoxFit.contain,
+                          ),
+                          const SizedBox(height: 30),
+                          // Buttons.
+                          _buildGameButton(context, startDrawingText, '/gameplay'),
+                          const SizedBox(height: 20),
+                          _buildGameButtonSecondary(context, highScoresText, '/highscore'),
+                          const SizedBox(height: 20),
+                          _buildGameButtonSecondary(context, instructionsText, '/instructions'),
+                          const SizedBox(height: 20),
+                          _buildGameButtonSecondary(context, settingsText, '/settings'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/settings');
-              },
-              child: Text(settingsText),
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/highscore');
-              },
-              child: Text(highScoresText),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

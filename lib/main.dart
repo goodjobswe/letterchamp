@@ -3,6 +3,7 @@ import 'screens/landing_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/gameplay_screen.dart';
 import 'screens/highscore_screen.dart';
+import 'screens/instruction_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         '/settings': (context) => SettingsScreen(),
         '/gameplay': (context) => GameplayScreen(),
         '/highscore': (context) => HighscoreScreen(),
+        '/instructions': (context) => InstructionScreen(),
       },
     );
   }
