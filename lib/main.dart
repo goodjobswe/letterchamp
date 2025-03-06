@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Letter Drawing App',
+      title: 'Letter Champ',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
