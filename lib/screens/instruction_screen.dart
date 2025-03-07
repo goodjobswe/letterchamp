@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/stroke_checkpoint.dart';
 import '../services/settings_service.dart';
+import '../services/sound_effects_manager.dart';
 
 class InstructionScreen extends StatefulWidget {
   const InstructionScreen({super.key});
@@ -69,6 +70,7 @@ class InstructionScreenState extends State<InstructionScreen>
   String _language = "en"; // Default language.
   int _helpStepIndex = 0;
   MainAxisAlignment columnAlignment = MainAxisAlignment.start;
+  bool _soundEffectsEnabled = false;
 
   // Tracing variables.
   List<Offset> _userStroke = [];
@@ -144,6 +146,7 @@ class InstructionScreenState extends State<InstructionScreen>
   Future<void> _loadSettingsAndGenerateDictionary() async {
     await settingsService.init();
     final language = await settingsService.getLanguage();
+    final soundEffectsEnabled = await settingsService.getSoundEffectsEnabled();
     // Use only the tutorial letters.
     List<String> formattedLetters = 'AL'.split('');
     setState(() {
@@ -154,6 +157,7 @@ class InstructionScreenState extends State<InstructionScreen>
       strokeCheckpointsList =
       letterStrokePaths[letter!] as List<StrokeCheckpoints>;
       _language = language;
+      _soundEffectsEnabled = soundEffectsEnabled;
       _requestHelp(); // Automatically show help on load.
     });
   }
@@ -298,10 +302,18 @@ class InstructionScreenState extends State<InstructionScreen>
                     backgroundColor: Colors.transparent,
                     elevation: 0,
                     leading: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      icon:
+                      const Icon(Icons.arrow_back, color: Colors.white),
                       iconSize: 36,
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: _language == "sv" ? "Huvudmeny" : "Main Menu",
+                      onPressed: () {
+                        if (_soundEffectsEnabled) {
+                          SoundEffectsManager()
+                              .playEffect('audio/button_click.mp3');
+                        }
+                        Navigator.pop(context);
+                      },
+                      tooltip:
+                      _language == "sv" ? "Huvudmeny" : "Main Menu",
                     ),
                     centerTitle: true,
                     title: Text(
@@ -310,9 +322,13 @@ class InstructionScreenState extends State<InstructionScreen>
                     ),
                     actions: [
                       IconButton(
-                        icon: const Icon(Icons.help_outline, color: Colors.white),
+                        icon: const Icon(Icons.help_outline,
+                            color: Colors.white),
                         iconSize: 36,
                         onPressed: () {
+                          if (_soundEffectsEnabled) {
+                            SoundEffectsManager().playEffect('audio/button_click.mp3');
+                          }
                           if (_helpStepIndex == 4) {
                             setState(() {
                               _helpStepIndex++;
@@ -329,25 +345,37 @@ class InstructionScreenState extends State<InstructionScreen>
                         builder: (context, constraints) {
                           const double designWidth = 300;
                           const double designHeight = 300;
-                          final double scale = min(constraints.maxWidth / designWidth, constraints.maxHeight / designHeight);
-                          final double dx = (constraints.maxWidth - designWidth * scale) / 2;
-                          final double dy = (constraints.maxHeight - designHeight * scale) / 2;
+                          final double scale = min(constraints.maxWidth /
+                              designWidth, constraints.maxHeight /
+                              designHeight);
+                          final double dx = (constraints.maxWidth -
+                              designWidth * scale) /
+                              2;
+                          final double dy = (constraints.maxHeight -
+                              designHeight * scale) /
+                              2;
                           return GestureDetector(
                             onPanStart: (details) {
-                              final Offset designPos = (details.localPosition - Offset(dx, dy)) / scale;
-                              if (kDebugMode) print("Offset: $designPos");
+                              final Offset designPos =
+                                  (details.localPosition -
+                                      Offset(dx, dy)) /
+                                      scale;
                               setState(() {
                                 _userStroke = [designPos];
                               });
                             },
                             onPanUpdate: (details) {
-                              final Offset designPos = (details.localPosition - Offset(dx, dy)) / scale;
+                              final Offset designPos =
+                                  (details.localPosition -
+                                      Offset(dx, dy)) /
+                                      scale;
                               setState(() {
                                 _userStroke.add(designPos);
                               });
                             },
                             onPanEnd: (details) async {
-                              final expectedStroke = strokeCheckpointsList[currentStrokeIndex];
+                              final expectedStroke =
+                              strokeCheckpointsList[currentStrokeIndex];
                               bool valid = false;
                               if (_userStroke.isEmpty) {
                                 setState(() {
@@ -364,8 +392,6 @@ class InstructionScreenState extends State<InstructionScreen>
                                     columnAlignment = MainAxisAlignment.center;
                                   }
                                 });
-                              } else {
-                                if (kDebugMode) print("Stroke is invalid");
                               }
                               if (currentStrokeIndex < strokeCheckpointsList.length && valid) {
                                 _completedStrokes.add(List.from(_userStroke));
@@ -382,10 +408,12 @@ class InstructionScreenState extends State<InstructionScreen>
                               animation: _helpAnimationController,
                               builder: (context, child) {
                                 return CustomPaint(
-                                  size: Size(constraints.maxWidth, constraints.maxHeight),
+                                  size: Size(constraints.maxWidth,
+                                      constraints.maxHeight),
                                   painter: CheckpointPainter(
                                     letter: letter!,
-                                    strokeCheckpoints: currentStrokeIndex < strokeCheckpointsList.length
+                                    strokeCheckpoints:
+                                    currentStrokeIndex < strokeCheckpointsList.length
                                         ? strokeCheckpointsList[currentStrokeIndex]
                                         : null,
                                     userStroke: _userStroke,
@@ -419,7 +447,13 @@ class InstructionScreenState extends State<InstructionScreen>
                         if (_helpStepIndex == 5) const SizedBox(height: 36),
                         if (_helpStepIndex == 5)
                           Center(
-                            child: _buildMainMenuButton(mainMenuText, () => Navigator.pop(context)),
+                            child: _buildMainMenuButton(mainMenuText, () {
+                              if (_soundEffectsEnabled) {
+                                SoundEffectsManager()
+                                    .playEffect('audio/button_click.mp3');
+                              }
+                              Navigator.pop(context);
+                            }),
                           ),
                       ],
                     ),

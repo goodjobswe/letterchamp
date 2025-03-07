@@ -4,8 +4,16 @@ import 'screens/settings_screen.dart';
 import 'screens/gameplay_screen.dart';
 import 'screens/highscore_screen.dart';
 import 'screens/instruction_screen.dart';
+import 'services/audio_manager.dart';
+import 'services/sound_effects_manager.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize the AudioManager and SoundEffectsManager singleton
+  AudioManager();
+  SoundEffectsManager();
+  // Run the app
   runApp(MyApp());
 }
 

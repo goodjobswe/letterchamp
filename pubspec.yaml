@@ -38,6 +38,7 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_launcher_icons: ^0.14.3
   flutter_native_splash: ^2.4.5
+  audioplayers: ^6.3.0
 
 flutter_launcher_icons: # Run with "dart run flutter_launcher_icons"
   android: true
@@ -84,6 +85,8 @@ flutter:
   assets:
     - assets/images/game_bg.png
     - assets/images/game_character.png
+    - assets/audio/background_music.mp3
+    - assets/audio/button_click.mp3
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

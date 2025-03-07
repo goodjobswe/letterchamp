@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/settings_service.dart';
+import '../services/audio_manager.dart';
+import '../services/sound_effects_manager.dart';
 
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
@@ -12,12 +14,15 @@ class LandingScreen extends StatefulWidget {
 class LandingScreenState extends State<LandingScreen> {
   String _language = "en";
   bool _isLoading = true;
+  bool _soundEffectsEnabled = false;
   final SettingsService settingsService = SettingsService();
 
   @override
   void initState() {
     super.initState();
     _loadLanguage();
+    _loadMusic();
+    _loadSoundEffects();
   }
 
   Future<void> _loadLanguage() async {
@@ -27,6 +32,21 @@ class LandingScreenState extends State<LandingScreen> {
       _language = language;
       _isLoading = false;
     });
+  }
+
+  Future<void> _loadMusic() async {
+    // Assuming you have a SettingsService similar to your other code:
+    final musicEnabled = await settingsService.getMusicEnabled();
+    if (musicEnabled) {
+      AudioManager().startMusic();
+    } else {
+      AudioManager().stopMusic();
+    }
+  }
+
+  Future<void> _loadSoundEffects() async {
+    final soundEffectsEnabled = await settingsService.getSoundEffectsEnabled();
+    _soundEffectsEnabled = soundEffectsEnabled;
   }
 
   // Helper: Button text style without shadow.
@@ -55,6 +75,9 @@ class LandingScreenState extends State<LandingScreen> {
         ),
       ),
       onPressed: () {
+        if (_soundEffectsEnabled) {
+          SoundEffectsManager().playEffect('audio/button_click.mp3');
+        }
         if (reloadOnReturn) {
           Navigator.pushNamed(context, route)
               .then((_) => _loadLanguage());

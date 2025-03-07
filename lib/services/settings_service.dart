@@ -5,7 +5,11 @@ class SettingsService {
   static const String _gameModeKey = 'gameMode';
   static const String _letterOrderKey = 'letterOrder';
   static const String _highScoreKey = 'highScore';
-  static const String _highestStreakKey = 'highestStreak'; // New key
+  static const String _highestStreakKey = 'highestStreak'; // New key for streak
+
+  // New keys for audio settings.
+  static const String _musicEnabledKey = 'musicEnabled';
+  static const String _soundEffectsEnabledKey = 'soundEffectsEnabled';
 
   SharedPreferences? _prefs;
 
@@ -14,7 +18,7 @@ class SettingsService {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  /// Retrieves the language setting. Defaults to 'en' (English).
+  /// Retrieves the language setting. Defaults to 'sv' (Swedish).
   Future<String> getLanguage() async {
     _prefs ??= await SharedPreferences.getInstance();
     return _prefs!.getString(_languageKey) ?? 'sv';
@@ -38,7 +42,7 @@ class SettingsService {
     await _prefs!.setString(_gameModeKey, gameMode);
   }
 
-  /// Retrieves the letter order. Defaults to 'alphabetic'.
+  /// Retrieves the letter order. Defaults to 'random'.
   Future<String> getLetterOrder() async {
     _prefs ??= await SharedPreferences.getInstance();
     return _prefs!.getString(_letterOrderKey) ?? 'random';
@@ -84,5 +88,29 @@ class SettingsService {
   Future<void> resetHighestStreak() async {
     _prefs ??= await SharedPreferences.getInstance();
     await _prefs!.setInt(_highestStreakKey, 0);
+  }
+
+  /// Retrieves whether music is enabled. Defaults to true.
+  Future<bool> getMusicEnabled() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!.getBool(_musicEnabledKey) ?? true;
+  }
+
+  /// Sets whether music is enabled.
+  Future<void> setMusicEnabled(bool enabled) async {
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setBool(_musicEnabledKey, enabled);
+  }
+
+  /// Retrieves whether sound effects are enabled. Defaults to true.
+  Future<bool> getSoundEffectsEnabled() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!.getBool(_soundEffectsEnabledKey) ?? true;
+  }
+
+  /// Sets whether sound effects are enabled.
+  Future<void> setSoundEffectsEnabled(bool enabled) async {
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setBool(_soundEffectsEnabledKey, enabled);
   }
 }

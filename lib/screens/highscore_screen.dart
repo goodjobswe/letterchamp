@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/settings_service.dart';
+import '../services/sound_effects_manager.dart';
 
 class HighscoreScreen extends StatefulWidget {
   const HighscoreScreen({super.key});
@@ -14,6 +15,7 @@ class HighscoreScreenState extends State<HighscoreScreen> {
   int _highScore = 0;
   int _highestStreak = 0;
   bool _isLoading = true;
+  bool _soundEffectsEnabled = false;
   final SettingsService settingsService = SettingsService();
 
   @override
@@ -28,11 +30,13 @@ class HighscoreScreenState extends State<HighscoreScreen> {
     final language = await settingsService.getLanguage();
     final highScore = await settingsService.getHighScore();
     final highestStreak = await settingsService.getHighestStreak();
+    final soundEffectsEnabled = await settingsService.getSoundEffectsEnabled();
     setState(() {
       _language = language;
       _highScore = highScore;
       _highestStreak = highestStreak;
       _isLoading = false;
+      _soundEffectsEnabled = soundEffectsEnabled;
     });
   }
 
@@ -210,10 +214,14 @@ class HighscoreScreenState extends State<HighscoreScreen> {
 
     final String titleText =
     _language == "sv" ? "Högsta poäng" : "High Scores";
-    final String highScoreLabel = _language == "sv" ? "Högsta poäng" : "High Score";
-    final String streakLabel = _language == "sv" ? "Flest i rad" : "Longest streak";
-    final String mainMenuText = _language == "sv" ? "Huvudmeny" : "Main Menu";
-    final String resetText = _language == "sv" ? "Nollställ" : "Reset";
+    final String highScoreLabel =
+    _language == "sv" ? "Högsta poäng" : "High Score";
+    final String streakLabel =
+    _language == "sv" ? "Flest i rad" : "Longest streak";
+    final String mainMenuText =
+    _language == "sv" ? "Huvudmeny" : "Main Menu";
+    final String resetText =
+    _language == "sv" ? "Nollställ" : "Reset";
 
     return Scaffold(
       body: Stack(
@@ -244,7 +252,12 @@ class HighscoreScreenState extends State<HighscoreScreen> {
                     leading: IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
                       iconSize: 36,
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        if (_soundEffectsEnabled) {
+                          SoundEffectsManager().playEffect('audio/button_click.mp3');
+                        }
+                        Navigator.pop(context);
+                      },
                       tooltip: _language == "sv" ? "Huvudmeny" : "Main Menu",
                     ),
                     centerTitle: true,
@@ -279,10 +292,20 @@ class HighscoreScreenState extends State<HighscoreScreen> {
                           ),
                           const SizedBox(height: 36),
                           // Main Menu Button.
-                          _buildMenuButton(mainMenuText, () => Navigator.pop(context)),
+                          _buildMenuButton(mainMenuText, () {
+                            if (_soundEffectsEnabled) {
+                              SoundEffectsManager().playEffect('audio/button_click.mp3');
+                            }
+                            Navigator.pop(context);
+                          }),
                           const SizedBox(height: 15),
                           // Reset Button.
-                          _buildResetButton(resetText, _confirmReset),
+                          _buildResetButton(resetText, () {
+                            if (_soundEffectsEnabled) {
+                              SoundEffectsManager().playEffect('audio/button_click.mp3');
+                            }
+                            _confirmReset();
+                          }),
                         ],
                       ),
                     ),

@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/stroke_checkpoint.dart';
 import '../services/settings_service.dart';
 import 'package:letterchamp/data/letter_stroke_paths.dart';
+import '../services/sound_effects_manager.dart';
 
 class GameplayScreen extends StatefulWidget {
   const GameplayScreen({super.key});
@@ -25,6 +26,7 @@ class GameplayScreenState extends State<GameplayScreen>
   String? letter; // Current letter to trace.
   String _language = "en"; // default language
   bool _firstHelpUsed = false;
+  bool _soundEffectsEnabled = false;
 
   // Tracing variables.
   List<Offset> _userStroke = [];
@@ -80,6 +82,7 @@ class GameplayScreenState extends State<GameplayScreen>
     final language = await settingsService.getLanguage();
     final gameMode = await settingsService.getGameMode();
     final letterOrder = await settingsService.getLetterOrder();
+    final soundEffectsEnabled = await settingsService.getSoundEffectsEnabled();
 
     // Generate the basic English alphabet.
     List<String> letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -117,6 +120,7 @@ class GameplayScreenState extends State<GameplayScreen>
       strokeCheckpointsList =
       letterStrokePaths[letter!] as List<StrokeCheckpoints>;
       _language = language; // Store language for later use.
+      _soundEffectsEnabled = soundEffectsEnabled;
     });
   }
 
@@ -502,7 +506,12 @@ class GameplayScreenState extends State<GameplayScreen>
                       icon:
                       const Icon(Icons.arrow_back, color: Colors.white),
                       iconSize: 36,
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        if (_soundEffectsEnabled) {
+                          SoundEffectsManager().playEffect('audio/button_click.mp3');
+                        }
+                        Navigator.pop(context);
+                        },
                       tooltip: _language == "sv"
                           ? "Huvudmeny"
                           : "Main Menu",
@@ -522,7 +531,12 @@ class GameplayScreenState extends State<GameplayScreen>
                         icon: const Icon(Icons.help_outline,
                             color: Colors.white),
                         iconSize: 36,
-                        onPressed: _requestHelp,
+                        onPressed: (){
+                          if (_soundEffectsEnabled) {
+                            SoundEffectsManager().playEffect('audio/button_click.mp3');
+                          }
+                          _requestHelp;
+                          },
                       ),
                     ],
                   ),
