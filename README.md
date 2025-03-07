@@ -1,25 +1,32 @@
-# LETTER CHAMP - A Letter Drawing App
+# Letter Champ - Every Stroke Counts
 
-A Flutter-based game that challenges players to trace letters by following predefined stroke checkpoints. The app dynamically validates each stroke, awards points for accuracy, and tracks high scores. It also supports two languages (English and Swedish) and customizable game settings.
+The game loads user settings to generate a list of letters (including additional Swedish characters when needed) formatted by the selected game mode. A single letter is displayed on the screen, and the player traces it on a dedicated canvas. The drawn strokes are compared against predefined checkpoints for accuracy, with support for both continuous and dot strokes. Correct tracing awards points and bonus multipliers for consecutive letters, while errors result in penalties and bonus resets. An optional help feature provides an animated guide for the expected stroke path, with the first use free and subsequent requests deducting points. The interface adapts its instructions and feedback based on the selected language, ensuring a dynamic and engaging user experience.
 
-## Features
-
-- **Dynamic Stroke Validation:**
-    - Each letter is defined by one or more stroke checkpoints.
-    - The app checks the user’s drawing for proximity to these checkpoints and validates continuous strokes, split strokes, and even dot strokes (for letters like "i").
-
-- **High Score Tracking:**
-    - The game tracks the player’s score and updates the high score if a new record is reached.
-    - A congratulatory event is triggered once per session when a new high score is achieved.
-
-- **Multi-Language Support:**
-    - The app supports English and Swedish.
-    - Users can change the language and game settings from the settings screen.
+## Gameplay Summary:
 
 - **Customizable Game Settings:**
-    - Choose your game mode (uppercase, lowercase, or random) and letter order (alphabetic or random) via a settings screen.
+  - Choose your game mode (uppercase, lowercase, or random) and letter order (alphabetic or random) via a settings screen.
 
-- **Visual Feedback:**
-    - Custom painting is used to draw the background letter (using Google Fonts).
-    - User strokes are shown in red and completed strokes in blue.
-    - Animated guidance (in orange) is displayed when help is requested.
+- **Letter Setup:**
+  - The game loads user settings (language, game mode, letter order) to generate a list of letters.
+  - For Swedish, additional characters (å, ä, ö) are included.
+  - Letters are formatted (uppercase, lowercase, or random) based on the chosen game mode.
+
+- **Tracing Mechanics:**
+  - A single letter is displayed on the screen for the player to trace.
+  - The player draws on a dedicated canvas; their strokes are recorded and compared against predefined stroke checkpoints for that letter.
+  - The system checks the stroke’s validity (including support for dot strokes and combining multiple stroke segments if needed).
+
+- **Scoring & Feedback:**
+  - Correctly traced letters earn points and bonus multipliers for consecutive successes.
+  - An incorrect stroke results in a penalty (deduction of points) and resets the bonus streak.
+  - Feedback is provided via snack bars with dynamic messages (both greetings and error alerts).
+
+- **Help Feature:**
+  - Players can tap a help icon to reveal an animated guide showing the expected stroke path.
+  - The first help request is free; subsequent requests deduct a set number of points.
+
+- **Visual & Interaction Elements:**
+  - A game-themed background with a dark overlay sets the stage.
+  - The current letter is displayed prominently, while the drawing area shows both the user's strokes and, when requested, the guided stroke animation.
+  - The interface adapts text and labels based on the selected language (English or Swedish).

@@ -175,30 +175,31 @@ class InstructionScreenState extends State<InstructionScreen>
 
     final List<Map<String, String>> helpMessages = [
       {
-        "sv": "Dra med ditt finger för att rita första delen av bokstaven.",
-        "en": "Drag your finger to draw the first part of the letter."
+        "sv": "Dra med fingret för att rita första delen.",
+        "en": "Drag your finger to draw the first part."
       },
       {
-        "sv": "Dra med ditt finger igen för att rita nästa del.",
-        "en": "Drag your finger again to draw the next part."
+        "sv": "Dra med fingret igen för nästa del.",
+        "en": "Drag your finger again for the next part."
       },
       {
-        "sv": "Dra en gång till för att rita sista delen av bokstaven.",
-        "en": "Drag one more time to draw the final part of the letter."
+        "sv": "Dra med fingret en gång till för sista delen.",
+        "en": "Drag your finger once more for the final part."
       },
       {
-        "sv": "Vissa bokstäver kan du rita med en sammanhängande linje.\n\nDra med ditt finger för att rita hela bokstaven.",
-        "en": "Some letters can be drawn with one continuous line.\n\nDrag your finger to draw the whole letter."
+        "sv": "Fantastiskt!\n\nVissa bokstäver kan ritas med en kontinuerlig linje.\n\nDra fingret för att rita hela bokstaven.",
+        "en": "Great!\n\nSome letters can be drawn with one continuous stroke.\n\nDrag your finger to draw the whole letter."
       },
       {
-        "sv": "Om du behöver hjälp med hur man ritar en bokstav kan du klicka på frågetecknet längst upp till höger.\n\nDu får hjälp en gång gratis, sedan kommer nästa hjälp att kosta dig 5 poäng.\n\nKlicka på frågetecknet för att komma till nästa steg.",
-        "en": "If you need help with how to draw a letter, you can click the question mark in the top right corner of the screen.\n\nYou get help once for free; the next time will cost you 5 points.\n\nClick the question mark to proceed to the next step."
+        "sv": "Tryck på frågetecknet uppe till höger om du behöver hjälp.\n\nFörsta hjälpen är gratis, därefter kostar den 5 poäng.\n\nTryck på frågetecknet för att fortsätta.",
+        "en": "Tap the question mark at the top right if you need any help.\n\nFirst help is free, thereafter it costs 5 points.\n\nTap the question mark to continue."
       },
       {
-        "sv": "När du ritar en bokstav korrekt så får du poäng, när du ritar flera korrekta bokstäver i rad får du extra bonuspoäng.\n\nOm du ritar en felaktig linje nollställs din bonus och du förlorar 2 poäng.",
-        "en": "When you successfully draw a letter, you receive points. If you draw multiple correct letters in a row, you earn extra bonus points.\n\nIf you draw an incorrect line, your bonus multiplier resets, and you lose 2 points."
+        "sv": "Rita bokstäverna på rätt sätt för att få poäng!\n\nFlera rätt i rad ger bonus. Ett misstag nollställer bonusen och kostar 2 poäng.",
+        "en": "Draw the letter in the correct way to receive points!\n\nConsecutive letters earn bonus. A mistake resets your bonus and costs 2 points."
       },
     ];
+
 
     final String mainMenuText =
     _language == 'sv' ? 'Huvudmeny' : 'Main Menu';
@@ -243,6 +244,13 @@ class InstructionScreenState extends State<InstructionScreen>
                         textStyle: const TextStyle(
                           fontSize: 16,
                           color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 10,
+                              color: Colors.black,
+                              offset: Offset(2, 2),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -368,7 +376,17 @@ class InstructionScreenState extends State<InstructionScreen>
                               : helpMessages[_helpStepIndex]["en"]!,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.pressStart2p(
-                            textStyle: const TextStyle(fontSize: 18, color: Colors.white),
+                            textStyle: const TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  blurRadius: 10,
+                                  color: Colors.black,
+                                  offset: Offset(2, 2),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         if(_helpStepIndex == 5)

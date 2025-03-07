@@ -17,7 +17,7 @@ class SettingsService {
   /// Retrieves the language setting. Defaults to 'en' (English).
   Future<String> getLanguage() async {
     _prefs ??= await SharedPreferences.getInstance();
-    return _prefs!.getString(_languageKey) ?? 'en';
+    return _prefs!.getString(_languageKey) ?? 'sv';
   }
 
   /// Sets the language setting.

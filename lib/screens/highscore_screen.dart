@@ -57,7 +57,11 @@ class HighscoreScreenState extends State<HighscoreScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey.shade900,
+        backgroundColor: Colors.black,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: const BorderSide(color: Colors.white),
+        ),
         title: Text(
           confirmTitle,
           style: GoogleFonts.pressStart2p(
@@ -177,6 +181,13 @@ class HighscoreScreenState extends State<HighscoreScreen> {
                         textStyle: const TextStyle(
                           fontSize: 16,
                           color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 10,
+                              color: Colors.black,
+                              offset: Offset(2, 2),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -193,6 +204,13 @@ class HighscoreScreenState extends State<HighscoreScreen> {
                               textStyle: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    blurRadius: 10,
+                                    color: Colors.black,
+                                    offset: Offset(2, 2),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -202,6 +220,13 @@ class HighscoreScreenState extends State<HighscoreScreen> {
                               textStyle: const TextStyle(
                                 fontSize: 28,
                                 color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    blurRadius: 10,
+                                    color: Colors.black,
+                                    offset: Offset(2, 2),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -214,6 +239,13 @@ class HighscoreScreenState extends State<HighscoreScreen> {
                               textStyle: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    blurRadius: 10,
+                                    color: Colors.black,
+                                    offset: Offset(2, 2),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -223,45 +255,17 @@ class HighscoreScreenState extends State<HighscoreScreen> {
                               textStyle: const TextStyle(
                                 fontSize: 28,
                                 color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    blurRadius: 10,
+                                    color: Colors.black,
+                                    offset: Offset(2, 2),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
                           const SizedBox(height: 36),
-                          // Reset Button.
-                          ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: WidgetStateProperty.all(Colors.transparent),
-                              elevation: WidgetStateProperty.all(0),
-                              padding: WidgetStateProperty.all(EdgeInsets.zero),
-                              shape: WidgetStateProperty.all(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  //side: BorderSide(color: Colors.grey.shade400, width: 2),
-                                ),
-                              ),
-                            ),
-                            onPressed: _confirmReset,
-                            child: Ink(
-                              decoration: BoxDecoration(
-                                  color: Colors.grey.shade300, // Use a solid, neutral background.
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Container(
-                                constraints: const BoxConstraints(minWidth: 150, minHeight: 50),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  resetText,
-                                  style: GoogleFonts.pressStart2p(
-                                    textStyle: const TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.black87, // Use a subtler text color.
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
                           // Main Menu Button for clarity.
                           ElevatedButton(
                             style: ButtonStyle(
@@ -301,6 +305,41 @@ class HighscoreScreenState extends State<HighscoreScreen> {
                                     textStyle: const TextStyle(
                                       fontSize: 16,
                                       color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Reset Button.
+                          const SizedBox(height: 15),
+                          ElevatedButton(
+                            style: ButtonStyle(
+                              backgroundColor: WidgetStateProperty.all(Colors.transparent),
+                              elevation: WidgetStateProperty.all(0),
+                              padding: WidgetStateProperty.all(EdgeInsets.zero),
+                              shape: WidgetStateProperty.all(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  //side: BorderSide(color: Colors.grey.shade400, width: 2),
+                                ),
+                              ),
+                            ),
+                            onPressed: _confirmReset,
+                            child: Ink(
+                              decoration: BoxDecoration(
+                                  color: Color(0xFF2E2B2F), // Use a solid, neutral background.
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Container(
+                                constraints: const BoxConstraints(minWidth: 150, minHeight: 50),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  resetText,
+                                  style: GoogleFonts.pressStart2p(
+                                    textStyle: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey.shade300, // Use a subtler text color.
                                     ),
                                   ),
                                 ),

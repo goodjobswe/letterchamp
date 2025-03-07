@@ -87,10 +87,14 @@ class LandingScreenState extends State<LandingScreen> {
           ),
         ),
       ),
-      onPressed: () => Navigator.pushNamed(context, route),
+      onPressed: () {
+        Navigator.pushNamed(context, route).then((_) {
+          _loadLanguage();
+        });
+      },
       child: Ink(
         decoration: BoxDecoration(
-          color: Colors.grey.shade300, // Use a solid, neutral background.
+          color: Color(0xFF2E2B2F), // Use a solid, neutral background.
           borderRadius: BorderRadius.circular(20),
         ),
         child: Container(
@@ -99,9 +103,9 @@ class LandingScreenState extends State<LandingScreen> {
           child: Text(
             text,
             style: GoogleFonts.pressStart2p(
-              textStyle: const TextStyle(
+              textStyle: TextStyle(
                 fontSize: 16,
-                color: Colors.black87,
+                color: Colors.grey.shade300,
               ),
             ),
           ),
@@ -167,6 +171,13 @@ class LandingScreenState extends State<LandingScreen> {
                         textStyle: const TextStyle(
                           fontSize: 20,
                           color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 10,
+                              color: Colors.black,
+                              offset: Offset(2, 2),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -205,11 +216,11 @@ class LandingScreenState extends State<LandingScreen> {
                           const SizedBox(height: 30),
                           // Buttons.
                           _buildGameButton(context, startDrawingText, '/gameplay'),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 15),
                           _buildGameButtonSecondary(context, highScoresText, '/highscore'),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 15),
                           _buildGameButtonSecondary(context, instructionsText, '/instructions'),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 15),
                           _buildGameButtonSecondary(context, settingsText, '/settings'),
                         ],
                       ),

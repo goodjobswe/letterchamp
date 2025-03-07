@@ -130,6 +130,13 @@ class SettingsScreenState extends State<SettingsScreen> {
                         textStyle: const TextStyle(
                           fontSize: 16,
                           color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 10,
+                              color: Colors.black,
+                              offset: Offset(2, 2),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -150,6 +157,13 @@ class SettingsScreenState extends State<SettingsScreen> {
                               textStyle: const TextStyle(
                                 fontSize: 18,
                                 color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    blurRadius: 10,
+                                    color: Colors.black,
+                                    offset: Offset(2, 2),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -175,6 +189,13 @@ class SettingsScreenState extends State<SettingsScreen> {
                                       textStyle: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.white,
+                                        shadows: [
+                                          Shadow(
+                                            blurRadius: 10,
+                                            color: Colors.black,
+                                            offset: Offset(2, 2),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
@@ -187,6 +208,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                                       textStyle: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.white,
+
                                       ),
                                     ),
                                   ),
@@ -203,6 +225,13 @@ class SettingsScreenState extends State<SettingsScreen> {
                               textStyle: const TextStyle(
                                 fontSize: 18,
                                 color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    blurRadius: 10,
+                                    color: Colors.black,
+                                    offset: Offset(2, 2),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -268,6 +297,13 @@ class SettingsScreenState extends State<SettingsScreen> {
                               textStyle: const TextStyle(
                                 fontSize: 18,
                                 color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    blurRadius: 10,
+                                    color: Colors.black,
+                                    offset: Offset(2, 2),
+                                  ),
+                                ],
                               ),
                             ),
                           ),

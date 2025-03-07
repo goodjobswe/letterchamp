@@ -1,5 +1,5 @@
 name: letterchamp
-description: "Learn how to draw letter"
+description: "Learn the correct way to draw letters"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -36,6 +36,27 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.5.2
   google_fonts: ^6.2.1
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.5
+
+flutter_launcher_icons: # Run with "dart run flutter_launcher_icons"
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.png"  # Path to your app icon
+  adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
+  adaptive_icon_background: "assets/images/app_icon_background.png"
+  adaptive_icon_foreground_inset: 24
+  remove_alpha_ios: true
+
+flutter_native_splash: # Run with "dart run flutter_native_splash:create"
+  color: "#2e2b2f"
+  branding: assets/images/branding.png
+  #branding_mode: top
+  #branding_bottom_padding: 128
+  android_12:
+    color: "#2e2b2f"
+    branding: assets/images/branding.png
+  web: false
 
 dev_dependencies:
   flutter_test:
