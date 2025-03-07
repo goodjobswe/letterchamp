@@ -613,7 +613,6 @@ class GameplayScreenState extends State<GameplayScreen>
                       },
                     ),
                   ),
-                  SizedBox(height: 100,),
                 ],
               ),
             ),
