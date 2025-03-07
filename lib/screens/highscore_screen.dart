@@ -12,7 +12,7 @@ class HighscoreScreen extends StatefulWidget {
 class HighscoreScreenState extends State<HighscoreScreen> {
   String _language = "en"; // default language
   int _highScore = 0;
-  int _highestStreak = 0; // New variable for highest streak.
+  int _highestStreak = 0;
   bool _isLoading = true;
   final SettingsService settingsService = SettingsService();
 
@@ -36,7 +36,7 @@ class HighscoreScreenState extends State<HighscoreScreen> {
     });
   }
 
-  // Resets the high score in settings.
+  // Resets the high score (and streak) in settings.
   Future<void> _resetHighScore() async {
     await settingsService.resetHighScore();
     final highScore = await settingsService.getHighScore();
@@ -45,7 +45,7 @@ class HighscoreScreenState extends State<HighscoreScreen> {
     });
   }
 
-  // Shows a confirmation dialog before resetting the high score.
+  // Shows a confirmation dialog before resetting the high score and streak.
   void _confirmReset() {
     final confirmTitle = _language == "sv" ? "Bekräfta" : "Confirm";
     final confirmContent = _language == "sv"
@@ -64,24 +64,18 @@ class HighscoreScreenState extends State<HighscoreScreen> {
         ),
         title: Text(
           confirmTitle,
-          style: GoogleFonts.pressStart2p(
-            textStyle: const TextStyle(color: Colors.white, fontSize: 18),
-          ),
+          style: _headerTextStyle(18),
         ),
         content: Text(
           confirmContent,
-          style: GoogleFonts.pressStart2p(
-            textStyle: const TextStyle(color: Colors.white, fontSize: 16),
-          ),
+          style: _headerTextStyle(16),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
               cancelText,
-              style: GoogleFonts.pressStart2p(
-                textStyle: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
+              style: _headerTextStyle(12),
             ),
           ),
           TextButton(
@@ -91,12 +85,100 @@ class HighscoreScreenState extends State<HighscoreScreen> {
             },
             child: Text(
               confirmText,
-              style: GoogleFonts.pressStart2p(
-                textStyle: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
+              style: _headerTextStyle(12),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  TextStyle _headerTextStyle(double size) {
+    return GoogleFonts.pressStart2p(
+      textStyle: TextStyle(
+        color: Colors.white,
+        fontSize: size,
+        shadows: const [
+          Shadow(
+            blurRadius: 10,
+            color: Colors.black,
+            offset: Offset(2, 2),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Common button decoration for consistency.
+  Widget _buildMenuButton(String text, VoidCallback onPressed) {
+    return ElevatedButton(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.all(Colors.transparent),
+        elevation: WidgetStateProperty.all(0),
+        padding: WidgetStateProperty.all(EdgeInsets.zero),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+      onPressed: onPressed,
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xfff45d27), Color(0xfff5851f)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 150, minHeight: 50),
+          alignment: Alignment.center,
+          child: Text(
+            text,
+            style: GoogleFonts.pressStart2p(
+              textStyle: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade300,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Button style for the reset button.
+  Widget _buildResetButton(String text, VoidCallback onPressed) {
+    return ElevatedButton(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.all(Colors.transparent),
+        elevation: WidgetStateProperty.all(0),
+        padding: WidgetStateProperty.all(EdgeInsets.zero),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+      onPressed: onPressed,
+      child: Ink(
+        decoration: BoxDecoration(
+          color: const Color(0xFF2E2B2F),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 150, minHeight: 50),
+          alignment: Alignment.center,
+          child: Text(
+            text,
+            style: GoogleFonts.pressStart2p(
+              textStyle: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade300,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -128,19 +210,10 @@ class HighscoreScreenState extends State<HighscoreScreen> {
 
     final String titleText =
     _language == "sv" ? "Högsta poäng" : "High Scores";
-    final String highScoreText = _language == "sv"
-        ? "Högsta poäng"
-        : "High Score";
-
-    // Lift out the highest streak texts.
-    final String streakLabelText = _language == "sv"
-        ? "Flest i rad"
-        : "Longest streak";
-    final String streakValueText = _highestStreak.toString();
-
+    final String highScoreLabel = _language == "sv" ? "Högsta poäng" : "High Score";
+    final String streakLabel = _language == "sv" ? "Flest i rad" : "Longest streak";
+    final String mainMenuText = _language == "sv" ? "Huvudmeny" : "Main Menu";
     final String resetText = _language == "sv" ? "Nollställ" : "Reset";
-    final String mainMenuText =
-    _language == "sv" ? "Huvudmeny" : "Main Menu";
 
     return Scaffold(
       body: Stack(
@@ -164,7 +237,7 @@ class HighscoreScreenState extends State<HighscoreScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Column(
                 children: [
-                  // Custom transparent AppBar with game font and a back button.
+                  // Transparent AppBar with back button.
                   AppBar(
                     backgroundColor: Colors.transparent,
                     elevation: 0,
@@ -177,19 +250,7 @@ class HighscoreScreenState extends State<HighscoreScreen> {
                     centerTitle: true,
                     title: Text(
                       titleText,
-                      style: GoogleFonts.pressStart2p(
-                        textStyle: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(
-                              blurRadius: 10,
-                              color: Colors.black,
-                              offset: Offset(2, 2),
-                            ),
-                          ],
-                        ),
-                      ),
+                      style: _headerTextStyle(16),
                     ),
                   ),
                   Expanded(
@@ -197,155 +258,31 @@ class HighscoreScreenState extends State<HighscoreScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Display high score.
+                          // High Score display.
                           Text(
-                            highScoreText,
-                            style: GoogleFonts.pressStart2p(
-                              textStyle: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    blurRadius: 10,
-                                    color: Colors.black,
-                                    offset: Offset(2, 2),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            highScoreLabel,
+                            style: _headerTextStyle(20),
                           ),
                           Text(
                             _highScore.toString(),
-                            style: GoogleFonts.pressStart2p(
-                              textStyle: const TextStyle(
-                                fontSize: 28,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    blurRadius: 10,
-                                    color: Colors.black,
-                                    offset: Offset(2, 2),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            style: _headerTextStyle(28),
                           ),
-                          //
                           const SizedBox(height: 20),
-                          // Display highest streak in two rows.
+                          // Highest Streak display.
                           Text(
-                            streakLabelText,
-                            style: GoogleFonts.pressStart2p(
-                              textStyle: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    blurRadius: 10,
-                                    color: Colors.black,
-                                    offset: Offset(2, 2),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            streakLabel,
+                            style: _headerTextStyle(20),
                           ),
                           Text(
-                            streakValueText,
-                            style: GoogleFonts.pressStart2p(
-                              textStyle: const TextStyle(
-                                fontSize: 28,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    blurRadius: 10,
-                                    color: Colors.black,
-                                    offset: Offset(2, 2),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            _highestStreak.toString(),
+                            style: _headerTextStyle(28),
                           ),
                           const SizedBox(height: 36),
-                          // Main Menu Button for clarity.
-                          ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor:
-                              WidgetStateProperty.all(Colors.transparent),
-                              elevation: WidgetStateProperty.all(0),
-                              padding:
-                              WidgetStateProperty.all(EdgeInsets.zero),
-                              shape: WidgetStateProperty.all(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                            ),
-                            onPressed: () => Navigator.pop(context),
-                            child: Ink(
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xfff45d27), Color(0xfff5851f)],
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Colors.black45,
-                                    blurRadius: 5,
-                                    offset: Offset(3, 3),
-                                  ),
-                                ],
-                              ),
-                              child: Container(
-                                constraints: const BoxConstraints(
-                                    minWidth: 150, minHeight: 50),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  mainMenuText,
-                                  style: GoogleFonts.pressStart2p(
-                                    textStyle: const TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Reset Button.
+                          // Main Menu Button.
+                          _buildMenuButton(mainMenuText, () => Navigator.pop(context)),
                           const SizedBox(height: 15),
-                          ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: WidgetStateProperty.all(Colors.transparent),
-                              elevation: WidgetStateProperty.all(0),
-                              padding: WidgetStateProperty.all(EdgeInsets.zero),
-                              shape: WidgetStateProperty.all(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  //side: BorderSide(color: Colors.grey.shade400, width: 2),
-                                ),
-                              ),
-                            ),
-                            onPressed: _confirmReset,
-                            child: Ink(
-                              decoration: BoxDecoration(
-                                  color: Color(0xFF2E2B2F), // Use a solid, neutral background.
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Container(
-                                constraints: const BoxConstraints(minWidth: 150, minHeight: 50),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  resetText,
-                                  style: GoogleFonts.pressStart2p(
-                                    textStyle: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey.shade300, // Use a subtler text color.
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                          // Reset Button.
+                          _buildResetButton(resetText, _confirmReset),
                         ],
                       ),
                     ),

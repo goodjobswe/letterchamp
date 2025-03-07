@@ -23,14 +23,26 @@ class LandingScreenState extends State<LandingScreen> {
   Future<void> _loadLanguage() async {
     await settingsService.init();
     final language = await settingsService.getLanguage();
-
     setState(() {
       _language = language;
       _isLoading = false;
     });
   }
 
-  Widget _buildGameButton(BuildContext context, String text, String route) {
+  // Helper: Button text style without shadow.
+  TextStyle _buttonTextStyle(Color color) {
+    return GoogleFonts.pressStart2p(
+      textStyle: TextStyle(fontSize: 16, color: color),
+    );
+  }
+
+  /// Combined helper for both primary and secondary game buttons.
+  /// - [primary] determines the style: primary uses a gradient background and white text,
+  ///   secondary uses a neutral background and grey text.
+  /// - [reloadOnReturn] optionally reloads language after returning from the route.
+  Widget _buildGameButton(
+      BuildContext context, String text, String route,
+      {bool primary = true, bool reloadOnReturn = false}) {
     return ElevatedButton(
       style: ButtonStyle(
         backgroundColor: WidgetStateProperty.all(Colors.transparent),
@@ -42,72 +54,40 @@ class LandingScreenState extends State<LandingScreen> {
           ),
         ),
       ),
-      onPressed: () => Navigator.pushNamed(context, route),
+      onPressed: () {
+        if (reloadOnReturn) {
+          Navigator.pushNamed(context, route)
+              .then((_) => _loadLanguage());
+        } else {
+          Navigator.pushNamed(context, route);
+        }
+      },
       child: Ink(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: primary
+              ? const LinearGradient(
             colors: [Color(0xfff45d27), Color(0xfff5851f)],
-          ),
+          )
+              : null,
+          color: primary ? null : const Color(0xFF2E2B2F),
           borderRadius: BorderRadius.circular(20),
-          boxShadow: const [
+          boxShadow: primary
+              ? const [
             BoxShadow(
               color: Colors.black45,
               blurRadius: 5,
               offset: Offset(3, 3),
             ),
-          ],
+          ]
+              : null,
         ),
         child: Container(
           constraints: const BoxConstraints(minWidth: 150, minHeight: 50),
           alignment: Alignment.center,
           child: Text(
             text,
-            style: GoogleFonts.pressStart2p(
-              textStyle: const TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGameButtonSecondary(BuildContext context, String text, String route) {
-    return ElevatedButton(
-      style: ButtonStyle(
-        backgroundColor: WidgetStateProperty.all(Colors.transparent),
-        elevation: WidgetStateProperty.all(0),
-        padding: WidgetStateProperty.all(EdgeInsets.zero),
-        shape: WidgetStateProperty.all(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            //side: BorderSide(color: Colors.grey.shade400, width: 2),
-          ),
-        ),
-      ),
-      onPressed: () {
-        Navigator.pushNamed(context, route).then((_) {
-          _loadLanguage();
-        });
-      },
-      child: Ink(
-        decoration: BoxDecoration(
-          color: Color(0xFF2E2B2F), // Use a solid, neutral background.
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 150, minHeight: 50),
-          alignment: Alignment.center,
-          child: Text(
-            text,
-            style: GoogleFonts.pressStart2p(
-              textStyle: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade300,
-              ),
-            ),
+            style: _buttonTextStyle(
+                primary ? Colors.white : Colors.grey.shade300),
           ),
         ),
       ),
@@ -118,23 +98,18 @@ class LandingScreenState extends State<LandingScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text("Loading"),
-        ),
+        appBar: AppBar(title: const Text("Loading")),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    final welcomeTitle = _language == "sv" ? "Letter Champ" : "Letter Champ";
+    final welcomeTitle = "Letter Champ";
     final welcomeText = _language == "sv"
         ? "Hej! Är du redo att bemästra alla bokstäver?"
         : "Hey! Are you ready to master all the letters?";
-    final startDrawingText =
-    _language == "sv" ? "Spela Nu" : "Play Now";
-    final settingsText =
-    _language == "sv" ? "Inställningar" : "Settings";
-    final highScoresText =
-    _language == "sv" ? "Högsta Poäng" : "High Scores";
+    final startDrawingText = _language == "sv" ? "Spela Nu" : "Play Now";
+    final settingsText = _language == "sv" ? "Inställningar" : "Settings";
+    final highScoresText = _language == "sv" ? "Högsta Poäng" : "High Scores";
     final instructionsText =
     _language == "sv" ? "Instruktioner" : "Instructions";
 
@@ -214,14 +189,15 @@ class LandingScreenState extends State<LandingScreen> {
                             fit: BoxFit.contain,
                           ),
                           const SizedBox(height: 30),
-                          // Buttons.
+                          // Primary game button.
                           _buildGameButton(context, startDrawingText, '/gameplay'),
                           const SizedBox(height: 15),
-                          _buildGameButtonSecondary(context, highScoresText, '/highscore'),
+                          // Secondary buttons.
+                          _buildGameButton(context, highScoresText, '/highscore', primary: false, reloadOnReturn: true),
                           const SizedBox(height: 15),
-                          _buildGameButtonSecondary(context, instructionsText, '/instructions'),
+                          _buildGameButton(context, instructionsText, '/instructions', primary: false, reloadOnReturn: true),
                           const SizedBox(height: 15),
-                          _buildGameButtonSecondary(context, settingsText, '/settings'),
+                          _buildGameButton(context, settingsText, '/settings', primary: false, reloadOnReturn: true),
                         ],
                       ),
                     ),

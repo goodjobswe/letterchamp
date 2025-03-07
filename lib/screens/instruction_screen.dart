@@ -15,19 +15,29 @@ class InstructionScreen extends StatefulWidget {
 
 class InstructionScreenState extends State<InstructionScreen>
     with SingleTickerProviderStateMixin {
-  // Settings service.
   final SettingsService settingsService = SettingsService();
 
+  // Predefined stroke paths for tutorial letters.
   final Map<String, List<StrokeCheckpoints>> letterStrokePaths = {
     'A': [
       const StrokeCheckpoints(
         start: Offset(150, 55),
-        inBetween: [Offset(136.0, 92.5), Offset(121.2, 130.9), Offset(106.3, 169.3), Offset(91.5, 207.7)],
+        inBetween: [
+          Offset(136.0, 92.5),
+          Offset(121.2, 130.9),
+          Offset(106.3, 169.3),
+          Offset(91.5, 207.7)
+        ],
         end: Offset(77, 243),
       ),
       const StrokeCheckpoints(
         start: Offset(150, 55),
-        inBetween: [Offset(165.8, 92.5), Offset(180.7, 130.9), Offset(195.7, 169.3), Offset(210.6, 207.7)],
+        inBetween: [
+          Offset(165.8, 92.5),
+          Offset(180.7, 130.9),
+          Offset(195.7, 169.3),
+          Offset(210.6, 207.7)
+        ],
         end: Offset(222, 243),
       ),
       const StrokeCheckpoints(
@@ -39,7 +49,14 @@ class InstructionScreenState extends State<InstructionScreen>
     'L': [
       const StrokeCheckpoints(
         start: Offset(124, 61),
-        inBetween: [Offset(124, 97.6), Offset(124, 134.6), Offset(124.0, 171.7), Offset(124, 208.8), Offset(124, 243), Offset(160.5, 243)],
+        inBetween: [
+          Offset(124, 97.6),
+          Offset(124, 134.6),
+          Offset(124.0, 171.7),
+          Offset(124, 208.8),
+          Offset(124, 243),
+          Offset(160.5, 243)
+        ],
         end: Offset(197, 243),
       ),
     ],
@@ -48,8 +65,8 @@ class InstructionScreenState extends State<InstructionScreen>
   List<String> _letters = [];
   bool _isLoading = true;
   int _currentLetterIndex = 0;
-  String? letter; // Current letter to trace.
-  String _language = "en"; // default language
+  String? letter; // Current letter used in tutorial.
+  String _language = "en"; // Default language.
   int _helpStepIndex = 0;
   MainAxisAlignment columnAlignment = MainAxisAlignment.start;
 
@@ -58,12 +75,45 @@ class InstructionScreenState extends State<InstructionScreen>
   final List<List<Offset>> _completedStrokes = [];
   int currentStrokeIndex = 0;
   late List<StrokeCheckpoints> strokeCheckpointsList;
-  late List<StrokeCheckpoints> strokeCheckpointsListCombined;
 
   // Help state.
   bool _showHelp = false;
   late AnimationController _helpAnimationController;
   final Duration _helpDuration = const Duration(seconds: 1);
+
+  // Tutorial help messages.
+  final List<Map<String, String>> helpMessages = [
+    {
+      "sv": "Dra med fingret för att rita första delen.",
+      "en": "Drag your finger to draw the first part."
+    },
+    {
+      "sv": "Dra med fingret igen för nästa del.",
+      "en": "Drag your finger again for the next part."
+    },
+    {
+      "sv": "Dra med fingret en gång till för sista delen.",
+      "en": "Drag your finger once more for the final part."
+    },
+    {
+      "sv":
+      "Fantastiskt!\n\nVissa bokstäver kan ritas med en kontinuerlig linje.\n\nDra fingret för att rita hela bokstaven.",
+      "en":
+      "Great!\n\nSome letters can be drawn with one continuous stroke.\n\nDrag your finger to draw the whole letter."
+    },
+    {
+      "sv":
+      "Tryck på frågetecknet uppe till höger om du behöver hjälp.\n\nFörsta hjälpen är gratis, därefter kostar den 5 poäng.\n\nTryck på frågetecknet för att fortsätta.",
+      "en":
+      "Tap the question mark at the top right if you need help.\n\nFirst help is free, thereafter it costs 5 points.\n\nTap the question mark to continue."
+    },
+    {
+      "sv":
+      "Rita bokstäverna på rätt sätt för att få poäng!\n\nFlera rätt i rad ger bonus. Ett misstag nollställer bonusen och kostar 2 poäng.",
+      "en":
+      "Draw the letter correctly to receive points!\n\nConsecutive letters earn bonus. A mistake resets your bonus and costs 2 points."
+    },
+  ];
 
   @override
   void initState() {
@@ -73,47 +123,46 @@ class InstructionScreenState extends State<InstructionScreen>
       vsync: this,
       duration: _helpDuration,
     );
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+    // Add a single status listener for the help animation.
+    _helpAnimationController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && _showHelp) {
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            _helpAnimationController.forward(from: 0.0);
+          }
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
-    _showHelp = false;
     _helpAnimationController.dispose();
     super.dispose();
   }
 
   Future<void> _loadSettingsAndGenerateDictionary() async {
     await settingsService.init();
-
     final language = await settingsService.getLanguage();
-
-    // Generate the letters for the tutorial
+    // Use only the tutorial letters.
     List<String> formattedLetters = 'AL'.split('');
-
     setState(() {
       _letters = formattedLetters;
       _isLoading = false;
       _currentLetterIndex = 0;
       letter = _letters[_currentLetterIndex];
-      // Cache the stroke checkpoints for the current letter.
       strokeCheckpointsList =
       letterStrokePaths[letter!] as List<StrokeCheckpoints>;
-      _language = language; // Store language for later use.
-      _requestHelp();
+      _language = language;
+      _requestHelp(); // Automatically show help on load.
     });
   }
 
-  /// Advances the game to the next letter.
+  /// Advances the tutorial to the next letter.
   void _nextLetter() {
     if (_currentLetterIndex < _letters.length - 1) {
       _currentLetterIndex++;
     } else {
-      // Restart from beginning if reached the end.
       _currentLetterIndex = 0;
     }
     setState(() {
@@ -126,23 +175,73 @@ class InstructionScreenState extends State<InstructionScreen>
     });
   }
 
-  /// Called when help is requested.
+  /// Sets the help overlay visible and starts the animation.
   void _requestHelp() {
-      setState(() {
-        _showHelp = true;
-      });
-      if (mounted) {
-        _helpAnimationController.forward(from: 0.0);
-      }
-    _helpAnimationController.addStatusListener((status) {
-      if (status == AnimationStatus.completed && _showHelp) {
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            _helpAnimationController.forward(from: 0.0);
-          }
-        });
-      }
+    setState(() {
+      _showHelp = true;
     });
+    if (mounted) {
+      _helpAnimationController.forward(from: 0.0);
+    }
+  }
+
+  // Helper to build a common text style.
+  TextStyle _instructionTextStyle(double size, {bool withShadow = true}) {
+    return GoogleFonts.pressStart2p(
+      textStyle: TextStyle(
+        fontSize: size,
+        color: Colors.white,
+        shadows: withShadow
+            ? const [
+          Shadow(
+            blurRadius: 10,
+            color: Colors.black,
+            offset: Offset(2, 2),
+          )
+        ]
+            : null,
+      ),
+    );
+  }
+
+  // Helper to build the main menu button.
+  Widget _buildMainMenuButton(String text, VoidCallback onPressed) {
+    return ElevatedButton(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.all(Colors.transparent),
+        elevation: WidgetStateProperty.all(0),
+        padding: WidgetStateProperty.all(EdgeInsets.zero),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+      onPressed: onPressed,
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xfff45d27), Color(0xfff5851f)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black45,
+              blurRadius: 5,
+              offset: Offset(3, 3),
+            ),
+          ],
+        ),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 150, minHeight: 50),
+          alignment: Alignment.center,
+          child: Text(
+            text,
+            style: _instructionTextStyle(16, withShadow: false),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -160,7 +259,7 @@ class InstructionScreenState extends State<InstructionScreen>
               ),
             ),
             Container(
-              color: Color.fromRGBO(0, 0, 0, 0.4),
+              color: const Color.fromRGBO(0, 0, 0, 0.4),
             ),
             const Center(child: CircularProgressIndicator()),
           ],
@@ -168,41 +267,9 @@ class InstructionScreenState extends State<InstructionScreen>
       );
     }
 
-    // Only show the letter in the AppBar.
-    final String appBarTitle = _language == "sv"
-        ? "Instruktioner"
-        : "Instructions";
-
-    final List<Map<String, String>> helpMessages = [
-      {
-        "sv": "Dra med fingret för att rita första delen.",
-        "en": "Drag your finger to draw the first part."
-      },
-      {
-        "sv": "Dra med fingret igen för nästa del.",
-        "en": "Drag your finger again for the next part."
-      },
-      {
-        "sv": "Dra med fingret en gång till för sista delen.",
-        "en": "Drag your finger once more for the final part."
-      },
-      {
-        "sv": "Fantastiskt!\n\nVissa bokstäver kan ritas med en kontinuerlig linje.\n\nDra fingret för att rita hela bokstaven.",
-        "en": "Great!\n\nSome letters can be drawn with one continuous stroke.\n\nDrag your finger to draw the whole letter."
-      },
-      {
-        "sv": "Tryck på frågetecknet uppe till höger om du behöver hjälp.\n\nFörsta hjälpen är gratis, därefter kostar den 5 poäng.\n\nTryck på frågetecknet för att fortsätta.",
-        "en": "Tap the question mark at the top right if you need any help.\n\nFirst help is free, thereafter it costs 5 points.\n\nTap the question mark to continue."
-      },
-      {
-        "sv": "Rita bokstäverna på rätt sätt för att få poäng!\n\nFlera rätt i rad ger bonus. Ett misstag nollställer bonusen och kostar 2 poäng.",
-        "en": "Draw the letter in the correct way to receive points!\n\nConsecutive letters earn bonus. A mistake resets your bonus and costs 2 points."
-      },
-    ];
-
-
-    final String mainMenuText =
-    _language == 'sv' ? 'Huvudmeny' : 'Main Menu';
+    final String appBarTitle =
+    _language == "sv" ? "Instruktioner" : "Instructions";
+    final String mainMenuText = _language == "sv" ? "Huvudmeny" : "Main Menu";
 
     return Scaffold(
       body: Stack(
@@ -218,7 +285,7 @@ class InstructionScreenState extends State<InstructionScreen>
           ),
           // Dark overlay.
           Container(
-            color: Color.fromRGBO(0, 0, 0, 0.4),
+            color: const Color.fromRGBO(0, 0, 0, 0.4),
           ),
           // Main content.
           SafeArea(
@@ -234,32 +301,19 @@ class InstructionScreenState extends State<InstructionScreen>
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
                       iconSize: 36,
                       onPressed: () => Navigator.pop(context),
-                      tooltip:
-                      _language == "sv" ? "Huvudmeny" : "Main Menu",
+                      tooltip: _language == "sv" ? "Huvudmeny" : "Main Menu",
                     ),
                     centerTitle: true,
                     title: Text(
                       appBarTitle,
-                      style: GoogleFonts.pressStart2p(
-                        textStyle: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(
-                              blurRadius: 10,
-                              color: Colors.black,
-                              offset: Offset(2, 2),
-                            ),
-                          ],
-                        ),
-                      ),
+                      style: _instructionTextStyle(16),
                     ),
                     actions: [
                       IconButton(
                         icon: const Icon(Icons.help_outline, color: Colors.white),
                         iconSize: 36,
-                        onPressed: (){
-                          if(_helpStepIndex == 4){
+                        onPressed: () {
+                          if (_helpStepIndex == 4) {
                             setState(() {
                               _helpStepIndex++;
                             });
@@ -268,42 +322,33 @@ class InstructionScreenState extends State<InstructionScreen>
                       ),
                     ],
                   ),
-                  if(_helpStepIndex < 4)
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        const double designWidth = 300;
-                        const double designHeight = 300;
-                        final double scale = min(
-                            constraints.maxWidth / designWidth,
-                            constraints.maxHeight / designHeight);
-                        final double dx =
-                            (constraints.maxWidth - designWidth * scale) / 2;
-                        final double dy =
-                            (constraints.maxHeight - designHeight * scale) / 2;
-
-                        return GestureDetector(
-                          onPanStart: (details) {
-                            final Offset designPos =
-                                (details.localPosition - Offset(dx, dy)) / scale;
-                            if (kDebugMode) {
-                              print("Offset: $designPos");
-                            }
-                            setState(() {
-                              _userStroke = [designPos];
-                            });
-                          },
-                          onPanUpdate: (details) {
-                            final Offset designPos =
-                                (details.localPosition - Offset(dx, dy)) / scale;
-                            setState(() {
-                              _userStroke.add(designPos);
-                            });
-                          },
-                          onPanEnd: (details) async {
-                            final expectedStroke = strokeCheckpointsList[currentStrokeIndex];
-                            bool valid = false;
-
+                  // Drawing area.
+                  if (_helpStepIndex < 4)
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          const double designWidth = 300;
+                          const double designHeight = 300;
+                          final double scale = min(constraints.maxWidth / designWidth, constraints.maxHeight / designHeight);
+                          final double dx = (constraints.maxWidth - designWidth * scale) / 2;
+                          final double dy = (constraints.maxHeight - designHeight * scale) / 2;
+                          return GestureDetector(
+                            onPanStart: (details) {
+                              final Offset designPos = (details.localPosition - Offset(dx, dy)) / scale;
+                              if (kDebugMode) print("Offset: $designPos");
+                              setState(() {
+                                _userStroke = [designPos];
+                              });
+                            },
+                            onPanUpdate: (details) {
+                              final Offset designPos = (details.localPosition - Offset(dx, dy)) / scale;
+                              setState(() {
+                                _userStroke.add(designPos);
+                              });
+                            },
+                            onPanEnd: (details) async {
+                              final expectedStroke = strokeCheckpointsList[currentStrokeIndex];
+                              bool valid = false;
                               if (_userStroke.isEmpty) {
                                 setState(() {
                                   _userStroke = [];
@@ -314,7 +359,7 @@ class InstructionScreenState extends State<InstructionScreen>
                               if (valid) {
                                 setState(() {
                                   _helpStepIndex++;
-                                  if(_helpStepIndex ==4){
+                                  if (_helpStepIndex == 4) {
                                     _showHelp = false;
                                     columnAlignment = MainAxisAlignment.center;
                                   }
@@ -322,50 +367,44 @@ class InstructionScreenState extends State<InstructionScreen>
                               } else {
                                 if (kDebugMode) print("Stroke is invalid");
                               }
-
-                            // Now award points only if the letter is completely finished.
-                            if (currentStrokeIndex < strokeCheckpointsList.length) {
-                              if (valid) {
+                              if (currentStrokeIndex < strokeCheckpointsList.length && valid) {
                                 _completedStrokes.add(List.from(_userStroke));
                                 currentStrokeIndex++;
-                                // Award bonus only when the entire letter is finished.
                                 if (currentStrokeIndex == strokeCheckpointsList.length) {
-
                                   _nextLetter();
                                 }
                               }
-                            }
-                            setState(() {
-                              _userStroke = [];
-                            });
-                          },
-                          child: AnimatedBuilder(
-                            animation: _helpAnimationController,
-                            builder: (context, child) {
-                              return CustomPaint(
-                                size: Size(constraints.maxWidth, constraints.maxHeight),
-                                painter: CheckpointPainter(
-                                  letter: letter!,
-                                  strokeCheckpoints: currentStrokeIndex < strokeCheckpointsList.length
-                                      ? strokeCheckpointsList[currentStrokeIndex]
-                                      : null,
-                                  userStroke: _userStroke,
-                                  completedStrokes: _completedStrokes,
-                                  scale: scale,
-                                  dx: dx,
-                                  dy: dy,
-                                  showHelp: _showHelp,
-                                  helpProgress: _helpAnimationController.value,
-                                ),
-                              );
+                              setState(() {
+                                _userStroke = [];
+                              });
                             },
-                          ),
-                        );
-                      },
+                            child: AnimatedBuilder(
+                              animation: _helpAnimationController,
+                              builder: (context, child) {
+                                return CustomPaint(
+                                  size: Size(constraints.maxWidth, constraints.maxHeight),
+                                  painter: CheckpointPainter(
+                                    letter: letter!,
+                                    strokeCheckpoints: currentStrokeIndex < strokeCheckpointsList.length
+                                        ? strokeCheckpointsList[currentStrokeIndex]
+                                        : null,
+                                    userStroke: _userStroke,
+                                    completedStrokes: _completedStrokes,
+                                    scale: scale,
+                                    dx: dx,
+                                    dy: dy,
+                                    showHelp: _showHelp,
+                                    helpProgress: _helpAnimationController.value,
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 20),
-                  // Instructional text.
+                  // Instructional text and main menu button.
                   Expanded(
                     child: Column(
                       mainAxisAlignment: columnAlignment,
@@ -375,67 +414,13 @@ class InstructionScreenState extends State<InstructionScreen>
                               ? helpMessages[_helpStepIndex]["sv"]!
                               : helpMessages[_helpStepIndex]["en"]!,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.pressStart2p(
-                            textStyle: const TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(
-                                  blurRadius: 10,
-                                  color: Colors.black,
-                                  offset: Offset(2, 2),
-                                ),
-                              ],
-                            ),
-                          ),
+                          style: _instructionTextStyle(18),
                         ),
-                        if(_helpStepIndex == 5)
-                          const SizedBox(height: 36),
-                        // Main Menu Button.
-                        if(_helpStepIndex == 5)
-                        Center(
-                          child: ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: WidgetStateProperty.all(Colors.transparent),
-                              elevation: WidgetStateProperty.all(0),
-                              padding: WidgetStateProperty.all(EdgeInsets.zero),
-                              shape: WidgetStateProperty.all(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                            ),
-                            onPressed: () => Navigator.pop(context),
-                            child: Ink(
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xfff45d27), Color(0xfff5851f)],
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Colors.black45,
-                                    blurRadius: 5,
-                                    offset: Offset(3, 3),
-                                  ),
-                                ],
-                              ),
-                              child: Container(
-                                constraints: const BoxConstraints(minWidth: 150, minHeight: 50),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  mainMenuText,
-                                  style: GoogleFonts.pressStart2p(
-                                    textStyle: const TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
+                        if (_helpStepIndex == 5) const SizedBox(height: 36),
+                        if (_helpStepIndex == 5)
+                          Center(
+                            child: _buildMainMenuButton(mainMenuText, () => Navigator.pop(context)),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -505,7 +490,7 @@ class CheckpointPainter extends CustomPainter {
   final double dx;
   final double dy;
   final bool showHelp;
-  final double helpProgress; // Value from 0.0 to 1.0
+  final double helpProgress; // 0.0 to 1.0
 
   CheckpointPainter({
     required this.letter,
@@ -545,7 +530,7 @@ class CheckpointPainter extends CustomPainter {
     // Draw completed strokes.
     if (completedStrokes.isNotEmpty) {
       final Paint completedPaint = Paint()
-        ..color = Color(0xFF32CD32) // LimeGreen
+        ..color = const Color(0xFF32CD32)
         ..strokeWidth = 8
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round;
@@ -567,29 +552,26 @@ class CheckpointPainter extends CustomPainter {
       }
     }
 
-    // Draw expected stroke guidance if help is requested.
+    // Draw expected stroke guidance if help is active.
     if (strokeCheckpoints != null && showHelp) {
       final List<Offset> points = strokeCheckpoints!.points;
       for (int i = 0; i < points.length; i++) {
         final Color color = i == 0
-            ? Color(0xFF39FF14)
-            : (i == points.length - 1 ? Color(0xFFFF073A) : Colors.grey);
+            ? const Color(0xFF39FF14)
+            : (i == points.length - 1 ? const Color(0xFFFF073A) : Colors.grey);
         final double radius = (i == 0 || i == points.length - 1) ? 8.0 : 4.0;
         final Paint checkpointPaint = Paint()..color = color;
         canvas.drawCircle(points[i], radius, checkpointPaint);
       }
-
       final Paint helpPaint = Paint()
         ..color = Colors.amberAccent.shade700
         ..strokeWidth = 4
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round;
-
       final Path fullPath = Path()..moveTo(points.first.dx, points.first.dy);
       for (final Offset p in points.skip(1)) {
         fullPath.lineTo(p.dx, p.dy);
       }
-
       final Path animatedPath = Path();
       for (final metric in fullPath.computeMetrics()) {
         final double length = metric.length * helpProgress;
@@ -598,10 +580,10 @@ class CheckpointPainter extends CustomPainter {
       canvas.drawPath(animatedPath, helpPaint);
     }
 
-    // Draw the current stroke.
+    // Draw current user stroke.
     if (userStroke.isNotEmpty) {
       final Paint strokePaint = Paint()
-        ..color = Color(0xFF00BFFF) // DeepSkyBlue
+        ..color = const Color(0xFF00BFFF)
         ..strokeWidth = 8
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round;

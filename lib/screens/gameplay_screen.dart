@@ -45,6 +45,8 @@ class GameplayScreenState extends State<GameplayScreen>
   late AnimationController _helpAnimationController;
   final Duration _helpDuration = const Duration(seconds: 1);
 
+  late ScaffoldMessengerState _scaffoldMessenger;
+
   @override
   void initState() {
     super.initState();
@@ -53,9 +55,11 @@ class GameplayScreenState extends State<GameplayScreen>
       vsync: this,
       duration: _helpDuration,
     );
+    // Add a single listener for the help animation.
+    _helpAnimationController.addStatusListener((status) {
+      // We control the hiding of the help overlay via _triggerHelpAnimation.
+    });
   }
-
-  late ScaffoldMessengerState _scaffoldMessenger;
 
   @override
   void didChangeDependencies() {
@@ -134,108 +138,70 @@ class GameplayScreenState extends State<GameplayScreen>
     });
   }
 
+  /// Displays a custom SnackBar with the provided message.
+  void _showSnackBar(String message) {
+    _scaffoldMessenger.hideCurrentSnackBar();
+    _scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: GoogleFonts.pressStart2p(
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+          ),
+        ),
+        backgroundColor: Colors.black,
+        behavior: SnackBarBehavior.floating,
+        elevation: 0,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: const BorderSide(color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  /// Triggers the help animation and hides the help overlay after [delay].
+  void _triggerHelpAnimation(Duration delay) {
+    setState(() {
+      _showHelp = true;
+    });
+    _helpAnimationController.forward(from: 0.0);
+    Future.delayed(delay, () {
+      if (mounted) {
+        setState(() {
+          _showHelp = false;
+        });
+      }
+    });
+  }
+
   /// Called when help is requested.
   void _requestHelp() {
-    // Hide any current snackbar first.
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    _scaffoldMessenger.hideCurrentSnackBar();
 
     if (!_firstHelpUsed) {
-      // First help is free.
       _firstHelpUsed = true;
-      setState(() {
-        _showHelp = true;
-      });
       final String helpCostMessage = _language == "sv"
           ? "Första hjälpen är gratis! Nästa kostar $_helpCost poäng."
           : "First help is free! Next help will cost $_helpCost points!";
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            helpCostMessage,
-            style: GoogleFonts.pressStart2p(
-              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-            ),
-          ),
-          backgroundColor: Colors.black,
-          behavior: SnackBarBehavior.floating,
-          elevation: 0,
-          margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: const BorderSide(color: Colors.white),
-          ),
-        ),
-      );
-      _helpAnimationController.forward(from: 0.0);
-      _helpAnimationController.addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          Future.delayed(const Duration(seconds: 2), () {
-            setState(() {
-              _showHelp = false;
-            });
-          });
-        }
-      });
+      _showSnackBar(helpCostMessage);
+      _triggerHelpAnimation(const Duration(seconds: 2));
     } else {
-      // Subsequent help requests cost points.
       if (_score >= _helpCost) {
         setState(() {
           _score -= _helpCost;
-          _showHelp = true;
         });
         final String helpCostMessage = _language == "sv"
             ? "Hjälp kostade $_helpCost poäng!"
             : "Help cost $_helpCost points!";
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              helpCostMessage,
-              style: GoogleFonts.pressStart2p(
-                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-              ),
-            ),
-            backgroundColor: Colors.black,
-            behavior: SnackBarBehavior.floating,
-            elevation: 0,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-              side: const BorderSide(color: Colors.white),
-            ),
-          ),
-        );
-        _helpAnimationController.forward(from: 0.0);
-        _helpAnimationController.addStatusListener((status) {
-          if (status == AnimationStatus.completed) {
-            Future.delayed(const Duration(seconds: 1), () {
-              setState(() {
-                _showHelp = false;
-              });
-            });
-          }
-        });
+        _showSnackBar(helpCostMessage);
+        _triggerHelpAnimation(const Duration(seconds: 1));
       } else {
         final String notEnoughPointsMessage = _language == "sv"
             ? "Inte tillräckligt med poäng för hjälp!"
             : "Not enough points for help!";
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              notEnoughPointsMessage,
-              style: GoogleFonts.pressStart2p(
-                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-              ),
-            ),
-            backgroundColor: Colors.black,
-            behavior: SnackBarBehavior.floating,
-            elevation: 0,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-              side: const BorderSide(color: Colors.white),
-            ),
-          ),
-        );
+        _showSnackBar(notEnoughPointsMessage);
       }
     }
   }
@@ -244,6 +210,238 @@ class GameplayScreenState extends State<GameplayScreen>
   int _calculateBonus() {
     double multiplier = 1.0 + min(_streak / 5.0, _maxMultiplier - 1.0);
     return (_baseLetterBonus * multiplier).round();
+  }
+
+  /// Processes the user stroke when the pan gesture ends.
+  Future<void> _processUserStroke() async {
+    final List<Offset> inBetween =
+    getEvenlyDistributedPointsDynamic(_userStroke, 35.0);
+    if (kDebugMode) {
+      print("inBetween: $inBetween");
+    }
+    final expectedStroke = strokeCheckpointsList[currentStrokeIndex];
+    bool valid = false;
+    int additionalSegments = 0;
+
+    // Handle dot strokes.
+    if (_isDotStroke(expectedStroke)) {
+      if (_userStroke.isEmpty ||
+          (_userStroke.first - expectedStroke.start).distance > 20.0) {
+        if (kDebugMode) print("Dot stroke invalid: tap not near dot.");
+        _resetUserStroke();
+        return;
+      } else {
+        if (kDebugMode) print("Dot stroke valid.");
+        valid = true;
+      }
+    } else {
+      final double totalDistance = _calculateStrokeDistance(_userStroke);
+      if (_userStroke.isEmpty || totalDistance < 20.0) {
+        if (kDebugMode) {
+          print("Stroke too short, ignoring. Total distance: $totalDistance");
+        }
+        _resetUserStroke();
+        return;
+      }
+      valid = _isStrokeValid(_userStroke, expectedStroke, 20.0, 20.0);
+      if (valid) {
+        if (kDebugMode) print("Single stroke valid");
+      } else if ((currentStrokeIndex + 1) < strokeCheckpointsList.length) {
+        final nextExpected = strokeCheckpointsList[currentStrokeIndex + 1];
+        List<Offset> combinedPoints = [
+          ...expectedStroke.points,
+          ...nextExpected.points
+        ];
+        valid = _isStrokeValid(
+          _userStroke,
+          StrokeCheckpoints(
+            start: combinedPoints.first,
+            inBetween: combinedPoints.sublist(1, combinedPoints.length - 1),
+            end: combinedPoints.last,
+          ),
+          20.0,
+          20.0,
+        );
+        if (valid) {
+          if (kDebugMode) print("Combined stroke (2 segments) is valid");
+          additionalSegments = 1;
+        } else if ((currentStrokeIndex + 2) < strokeCheckpointsList.length) {
+          final nextNextExpected =
+          strokeCheckpointsList[currentStrokeIndex + 2];
+          List<Offset> tripleCombinedPoints = [
+            ...expectedStroke.points,
+            ...nextExpected.points,
+            ...nextNextExpected.points
+          ];
+          valid = _isStrokeValid(
+            _userStroke,
+            StrokeCheckpoints(
+              start: tripleCombinedPoints.first,
+              inBetween:
+              tripleCombinedPoints.sublist(1, tripleCombinedPoints.length - 1),
+              end: tripleCombinedPoints.last,
+            ),
+            20.0,
+            20.0,
+          );
+          if (valid) {
+            if (kDebugMode) print("Combined stroke (3 segments) is valid");
+            additionalSegments = 2;
+          } else if ((currentStrokeIndex + 3) < strokeCheckpointsList.length) {
+            final nextNextNextExpected =
+            strokeCheckpointsList[currentStrokeIndex + 3];
+            List<Offset> quadrupleCombinedPoints = [
+              ...expectedStroke.points,
+              ...nextExpected.points,
+              ...strokeCheckpointsList[currentStrokeIndex + 2].points,
+              ...nextNextNextExpected.points
+            ];
+            valid = _isStrokeValid(
+              _userStroke,
+              StrokeCheckpoints(
+                start: quadrupleCombinedPoints.first,
+                inBetween: quadrupleCombinedPoints.sublist(
+                    1, quadrupleCombinedPoints.length - 1),
+                end: quadrupleCombinedPoints.last,
+              ),
+              20.0,
+              20.0,
+            );
+            if (valid) {
+              if (kDebugMode) print("Combined stroke (4 segments) is valid");
+              additionalSegments = 3;
+            } else {
+              if (kDebugMode) print("Stroke is invalid");
+            }
+          } else {
+            if (kDebugMode) print("Stroke is invalid");
+          }
+        } else {
+          if (kDebugMode) print("Stroke is invalid");
+        }
+      } else {
+        if (kDebugMode) print("Stroke is invalid");
+      }
+    }
+
+    if (valid) {
+      await _handleValidStroke(additionalSegments);
+    } else {
+      _handleInvalidStroke();
+    }
+    _resetUserStroke();
+  }
+
+  void _resetUserStroke() {
+    setState(() {
+      _userStroke = [];
+    });
+  }
+
+  /// Handles a valid stroke and awards points if the letter is finished.
+  Future<void> _handleValidStroke(int additionalSegments) async {
+    _completedStrokes.add(List.from(_userStroke));
+    currentStrokeIndex += (1 + additionalSegments);
+    if (currentStrokeIndex >= strokeCheckpointsList.length) {
+      final int oldHighScore = await settingsService.getHighScore();
+      final int oldHighestStreak = await settingsService.getHighestStreak();
+      _streak++;
+      final int bonus = _calculateBonus();
+      setState(() {
+        _score += bonus;
+      });
+      bool newHighScore = false;
+      if (_score > oldHighScore) {
+        newHighScore = true;
+        await settingsService.setHighScore(_score);
+      }
+      if (_streak > oldHighestStreak) {
+        await settingsService.setHighestStreak(_streak);
+      }
+      String streakMessage = _streak > 1
+          ? _language == "sv"
+          ? " $_streak i rad bonus!"
+          : " $_streak in a row bonus!"
+          : "";
+      String newHighScoreMessage = newHighScore
+          ? _language == "sv"
+          ? " Nytt rekord!"
+          : " New high score!"
+          : "";
+      final Random random = Random();
+      final List<String> englishGreetings = [
+        "Great job!",
+        "Awesome work!",
+        "Fantastic!",
+        "Brilliant!",
+        "Well done!",
+        "Superb!",
+        "Excellent!",
+        "Keep it up!",
+        "Outstanding!",
+        "You're on fire!"
+      ];
+      final List<String> swedishGreetings = [
+        "Bra jobbat!",
+        "Fantastiskt!",
+        "Strålande!",
+        "Utmärkt!",
+        "Toppen!",
+        "Suveränt!",
+        "Jättebra!",
+        "Fortsätt så!",
+        "Enastående!",
+        "Du är grym!"
+      ];
+      final String greeting = _language == "sv"
+          ? swedishGreetings[random.nextInt(swedishGreetings.length)]
+          : englishGreetings[random.nextInt(englishGreetings.length)];
+      final String snackMessage = _language == "sv"
+          ? "$greeting Du fick $bonus poäng.$streakMessage$newHighScoreMessage"
+          : "$greeting You earned $bonus points.$streakMessage$newHighScoreMessage";
+      _showSnackBar(snackMessage);
+      _nextLetter();
+    }
+  }
+
+  /// Handles an invalid stroke by resetting the streak and deducting penalty points.
+  void _handleInvalidStroke() {
+    _streak = 0;
+    setState(() {
+      _score -= _baseLetterPenalty;
+    });
+    final Random random = Random();
+    final List<String> englishErrorMessages = [
+      "Oops! That didn't work.",
+      "Whoops! That wasn't quite right.",
+      "Hmm, something went wrong.",
+      "Oh no! That stroke didn't count.",
+      "Yikes! That didn't come out as expected.",
+      "Darn! Let's try that stroke again.",
+      "Uh-oh! That stroke missed the mark.",
+      "Oops! Not quite right.",
+      "Ah, that didn't work. Give it another go!",
+      "Oops! Let's try that again."
+    ];
+    final List<String> swedishErrorMessages = [
+      "Oj då! Det blev fel.",
+      "Oj, det var inte rätt.",
+      "Hmm, något gick snett.",
+      "Åh nej! Den linjen räknades inte.",
+      "Oj, det blev inte som förväntat.",
+      "Aj då! Försök igen.",
+      "Hmm, den linjen blev inte rätt.",
+      "Oj, inte riktigt, försök igen!",
+      "Aj, det där blev inte som det skulle. Prova igen!",
+      "Oj, det där räckte inte. Försök en gång till!"
+    ];
+    final String errorMessage = _language == "sv"
+        ? swedishErrorMessages[random.nextInt(swedishErrorMessages.length)]
+        : englishErrorMessages[random.nextInt(englishErrorMessages.length)];
+    final String snackMessage = _language == "sv"
+        ? "$errorMessage Du förlorade $_baseLetterPenalty poäng. Försök igen!"
+        : "$errorMessage You lost $_baseLetterPenalty points. Try again!";
+    _showSnackBar(snackMessage);
   }
 
   @override
@@ -269,11 +467,8 @@ class GameplayScreenState extends State<GameplayScreen>
       );
     }
 
-    // Only show the letter in the AppBar.
-    final String appBarTitle = _language == "sv"
-        ? "Bokstav: $letter"
-        : "Letter: $letter";
-    // Score displayed in a separate widget.
+    final String appBarTitle =
+    _language == "sv" ? "Bokstav: $letter" : "Letter: $letter";
     final String scoreText =
     _language == "sv" ? "Poäng: $_score" : "Score: $_score";
 
@@ -304,11 +499,13 @@ class GameplayScreenState extends State<GameplayScreen>
                     backgroundColor: Colors.transparent,
                     elevation: 0,
                     leading: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      icon:
+                      const Icon(Icons.arrow_back, color: Colors.white),
                       iconSize: 36,
                       onPressed: () => Navigator.pop(context),
-                      tooltip:
-                      _language == "sv" ? "Huvudmeny" : "Main Menu",
+                      tooltip: _language == "sv"
+                          ? "Huvudmeny"
+                          : "Main Menu",
                     ),
                     centerTitle: true,
                     title: Text(
@@ -322,7 +519,8 @@ class GameplayScreenState extends State<GameplayScreen>
                     ),
                     actions: [
                       IconButton(
-                        icon: const Icon(Icons.help_outline, color: Colors.white),
+                        icon: const Icon(Icons.help_outline,
+                            color: Colors.white),
                         iconSize: 36,
                         onPressed: _requestHelp,
                       ),
@@ -330,7 +528,8 @@ class GameplayScreenState extends State<GameplayScreen>
                   ),
                   // Display the score below the AppBar.
                   Container(
-                    margin: const EdgeInsets.only(top: 8, bottom: 8),
+                    margin:
+                    const EdgeInsets.only(top: 8, bottom: 8),
                     child: Text(
                       scoreText,
                       style: GoogleFonts.pressStart2p(
@@ -351,15 +550,19 @@ class GameplayScreenState extends State<GameplayScreen>
                         final double scale = min(
                             constraints.maxWidth / designWidth,
                             constraints.maxHeight / designHeight);
-                        final double dx =
-                            (constraints.maxWidth - designWidth * scale) / 2;
-                        final double dy =
-                            (constraints.maxHeight - designHeight * scale) / 2;
+                        final double dx = (constraints.maxWidth -
+                            designWidth * scale) /
+                            2;
+                        final double dy = (constraints.maxHeight -
+                            designHeight * scale) /
+                            2;
 
                         return GestureDetector(
                           onPanStart: (details) {
                             final Offset designPos =
-                                (details.localPosition - Offset(dx, dy)) / scale;
+                                (details.localPosition -
+                                    Offset(dx, dy)) /
+                                    scale;
                             if (kDebugMode) {
                               print("Offset: $designPos");
                             }
@@ -370,289 +573,29 @@ class GameplayScreenState extends State<GameplayScreen>
                           },
                           onPanUpdate: (details) {
                             final Offset designPos =
-                                (details.localPosition - Offset(dx, dy)) / scale;
+                                (details.localPosition -
+                                    Offset(dx, dy)) /
+                                    scale;
                             setState(() {
                               _userStroke.add(designPos);
                             });
                           },
                           onPanEnd: (details) async {
-                            final List<Offset> inBetween =
-                            getEvenlyDistributedPointsDynamic(_userStroke, 35.0);
-                            if (kDebugMode) {
-                              print("inBetween: $inBetween");
-                            }
-                            final expectedStroke = strokeCheckpointsList[currentStrokeIndex];
-                            bool valid = false;
-
-                            // Handle dot strokes.
-                            if (_isDotStroke(expectedStroke)) {
-                              if (_userStroke.isEmpty ||
-                                  (_userStroke.first - expectedStroke.start).distance > 20.0) {
-                                if (kDebugMode) {
-                                  print("Dot stroke invalid: tap not near dot.");
-                                }
-                                setState(() {
-                                  _userStroke = [];
-                                });
-                                return;
-                              } else {
-                                if (kDebugMode) {
-                                  print("Dot stroke valid.");
-                                }
-                                valid = true;
-                              }
-                            } else {
-                              final double totalDistance = _calculateStrokeDistance(_userStroke);
-                              if (_userStroke.isEmpty || totalDistance < 20.0) {
-                                if (kDebugMode) {
-                                  print("Stroke too short, ignoring. Total distance: $totalDistance");
-                                }
-                                setState(() {
-                                  _userStroke = [];
-                                });
-                                return;
-                              }
-                              valid = _isStrokeValid(_userStroke, expectedStroke, 20.0, 20.0);
-                              if (valid) {
-                                if (kDebugMode) print("Single stroke valid");
-                              } else if ((currentStrokeIndex + 1) < strokeCheckpointsList.length) {
-                                final nextExpected = strokeCheckpointsList[currentStrokeIndex + 1];
-                                List<Offset> combinedPoints = [...expectedStroke.points, ...nextExpected.points];
-                                valid = _isStrokeValid(
-                                  _userStroke,
-                                  StrokeCheckpoints(
-                                    start: combinedPoints.first,
-                                    inBetween: combinedPoints.sublist(1, combinedPoints.length - 1),
-                                    end: combinedPoints.last,
-                                  ),
-                                  20.0,
-                                  20.0,
-                                );
-                                if (valid) {
-                                  if (kDebugMode) print("Combined stroke (2 segments) is valid");
-                                  currentStrokeIndex += 1;
-                                } else if ((currentStrokeIndex + 2) < strokeCheckpointsList.length) {
-                                  final nextNextExpected = strokeCheckpointsList[currentStrokeIndex + 2];
-                                  List<Offset> tripleCombinedPoints = [...expectedStroke.points, ...nextExpected.points, ...nextNextExpected.points];
-                                  valid = _isStrokeValid(
-                                    _userStroke,
-                                    StrokeCheckpoints(
-                                      start: tripleCombinedPoints.first,
-                                      inBetween: tripleCombinedPoints.sublist(1, tripleCombinedPoints.length - 1),
-                                      end: tripleCombinedPoints.last,
-                                    ),
-                                    20.0,
-                                    20.0,
-                                  );
-                                  if (valid) {
-                                    if (kDebugMode) print("Combined stroke (3 segments) is valid");
-                                    currentStrokeIndex += 2;
-                                  } else if ((currentStrokeIndex + 3) < strokeCheckpointsList.length) {
-                                    final nextNextNextExpected = strokeCheckpointsList[currentStrokeIndex + 3];
-                                    List<Offset> quadrupleCombinedPoints = [
-                                      ...expectedStroke.points,
-                                      ...nextExpected.points,
-                                      ...strokeCheckpointsList[currentStrokeIndex + 2].points,
-                                      ...nextNextNextExpected.points
-                                    ];
-                                    valid = _isStrokeValid(
-                                      _userStroke,
-                                      StrokeCheckpoints(
-                                        start: quadrupleCombinedPoints.first,
-                                        inBetween: quadrupleCombinedPoints.sublist(1, quadrupleCombinedPoints.length - 1),
-                                        end: quadrupleCombinedPoints.last,
-                                      ),
-                                      20.0,
-                                      20.0,
-                                    );
-                                    if (valid) {
-                                      if (kDebugMode) print("Combined stroke (4 segments) is valid");
-                                      currentStrokeIndex += 3;
-                                    } else {
-                                      if (kDebugMode) print("Stroke is invalid");
-                                    }
-                                  } else {
-                                    if (kDebugMode) print("Stroke is invalid");
-                                  }
-                                } else {
-                                  if (kDebugMode) print("Stroke is invalid");
-                                }
-                              } else {
-                                if (kDebugMode) print("Stroke is invalid");
-                              }
-                            }
-
-                            // Now award points only if the letter is completely finished.
-                            if (currentStrokeIndex < strokeCheckpointsList.length) {
-                              if (valid) {
-                                _completedStrokes.add(List.from(_userStroke));
-                                currentStrokeIndex++;
-                                // Award bonus only when the entire letter is finished.
-                                if (currentStrokeIndex == strokeCheckpointsList.length) {
-                                  final int oldHighScore = await settingsService.getHighScore();
-                                  final int oldHighestStreak = await settingsService.getHighestStreak();
-                                  _streak++;
-                                  final int bonus = _calculateBonus();
-                                  setState(() {
-                                    _score += bonus;
-                                  });
-                                  bool newHighScore = false;
-                                  if (_score > oldHighScore) {
-                                    newHighScore = true;
-                                    await settingsService.setHighScore(_score);
-                                  }
-                                  if (_streak > oldHighestStreak) {
-                                    await settingsService.setHighestStreak(_streak);
-                                  }
-                                  // Build dynamic message.
-                                  String streakMessage = _streak > 1
-                                      ? _language == "sv"
-                                      ? " $_streak i rad bonus!"
-                                      : " $_streak in a row bonus!"
-                                      : "";
-                                  String newHighScoreMessage = newHighScore
-                                      ? _language == "sv"
-                                      ? " Nytt rekord!"
-                                      : " New high score!"
-                                      : "";
-                                  final Random random = Random();
-
-                                  final List<String> englishGreetings = [
-                                    "Great job!",
-                                    "Awesome work!",
-                                    "Fantastic!",
-                                    "Brilliant!",
-                                    "Well done!",
-                                    "Superb!",
-                                    "Excellent!",
-                                    "Keep it up!",
-                                    "Outstanding!",
-                                    "You're on fire!"
-                                  ];
-
-                                  final List<String> swedishGreetings = [
-                                    "Bra jobbat!",
-                                    "Fantastiskt!",
-                                    "Strålande!",
-                                    "Utmärkt!",
-                                    "Toppen!",
-                                    "Suveränt!",
-                                    "Jättebra!",
-                                    "Fortsätt så!",
-                                    "Enastående!",
-                                    "Du är grym!"
-                                  ];
-
-                                  final String greeting = _language == "sv"
-                                      ? swedishGreetings[random.nextInt(swedishGreetings.length)]
-                                      : englishGreetings[random.nextInt(englishGreetings.length)];
-
-                                  final String snackMessage = _language == "sv"
-                                      ? "$greeting Du fick $bonus poäng.$streakMessage$newHighScoreMessage"
-                                      : "$greeting You earned $bonus points.$streakMessage$newHighScoreMessage";
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        snackMessage,
-                                        style: GoogleFonts.pressStart2p(
-                                          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                                        ),
-                                      ),
-                                      backgroundColor: Colors.black,
-                                      behavior: SnackBarBehavior.floating,
-                                      elevation: 0,
-                                      margin: const EdgeInsets.all(16),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                        side: const BorderSide(color: Colors.white),
-                                      ),
-                                    ),
-                                  );
-                                  if (kDebugMode) {
-                                    print("Streak: $_streak. Bonus awarded: $bonus points.");
-                                  }
-                                  _nextLetter();
-                                }
-                              } else {
-                                _streak = 0;
-                                setState(() {
-                                  _score -= _baseLetterPenalty;
-                                });
-
-                                final Random random = Random();
-
-                                final List<String> englishErrorMessages = [
-                                  "Oops! That didn't work.",
-                                  "Whoops! That wasn't quite right.",
-                                  "Hmm, something went wrong.",
-                                  "Oh no! That stroke didn't count.",
-                                  "Yikes! That didn't come out as expected.",
-                                  "Darn! Let's try that stroke again.",
-                                  "Uh-oh! That stroke missed the mark.",
-                                  "Oops! Not quite right.",
-                                  "Ah, that didn't work. Give it another go!",
-                                  "Oops! Let's try that again."
-                                ];
-
-                                final List<String> swedishErrorMessages = [
-                                  "Oj då! Det blev fel.",
-                                  "Oj, det var inte rätt.",
-                                  "Hmm, något gick snett.",
-                                  "Åh nej! Den linjen räknades inte.",
-                                  "Oj, det blev inte som förväntat.",
-                                  "Aj då! Försök igen.",
-                                  "Hmm, den linjen blev inte rätt.",
-                                  "Oj, inte riktigt, försök igen!",
-                                  "Aj, det där blev inte som det skulle. Prova igen!",
-                                  "Oj, det där räckte inte. Försök en gång till!"
-                                ];
-
-                                final String errorMessage = _language == "sv"
-                                    ? swedishErrorMessages[random.nextInt(swedishErrorMessages.length)]
-                                    : englishErrorMessages[random.nextInt(englishErrorMessages.length)];
-
-                                final String snackMessage = _language == "sv"
-                                    ? "$errorMessage Du förlorade $_baseLetterPenalty poäng. Försök igen!"
-                                    : "$errorMessage You lost $_baseLetterPenalty points. Try again!";
-                                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      snackMessage,
-                                      style: GoogleFonts.pressStart2p(
-                                        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                                      ),
-                                    ),
-                                    backgroundColor: Colors.black,
-                                    behavior: SnackBarBehavior.floating,
-                                    elevation: 0,
-                                    margin: const EdgeInsets.all(16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      side: const BorderSide(color: Colors.white),
-                                    ),
-                                  ),
-                                );
-                                if (kDebugMode) {
-                                  print("Stroke invalid. Streak reset. Penalty: $_baseLetterPenalty points.");
-                                }
-                              }
-                            }
-                            setState(() {
-                              _userStroke = [];
-                            });
+                            await _processUserStroke();
                           },
                           child: AnimatedBuilder(
                             animation: _helpAnimationController,
                             builder: (context, child) {
                               return CustomPaint(
-                                size: Size(constraints.maxWidth, constraints.maxHeight),
+                                size: Size(constraints.maxWidth,
+                                    constraints.maxHeight),
                                 painter: CheckpointPainter(
                                   letter: letter!,
-                                  strokeCheckpoints: currentStrokeIndex < strokeCheckpointsList.length
-                                      ? strokeCheckpointsList[currentStrokeIndex]
+                                  strokeCheckpoints:
+                                  currentStrokeIndex <
+                                      strokeCheckpointsList.length
+                                      ? strokeCheckpointsList[
+                                  currentStrokeIndex]
                                       : null,
                                   userStroke: _userStroke,
                                   completedStrokes: _completedStrokes,
@@ -660,7 +603,8 @@ class GameplayScreenState extends State<GameplayScreen>
                                   dx: dx,
                                   dy: dy,
                                   showHelp: _showHelp,
-                                  helpProgress: _helpAnimationController.value,
+                                  helpProgress:
+                                  _helpAnimationController.value,
                                 ),
                               );
                             },
@@ -694,12 +638,15 @@ class GameplayScreenState extends State<GameplayScreen>
       List<Offset> stroke,
       StrokeCheckpoints checkpoints,
       double tolerance,
-      double maxDevTol,
-      ) {
+      double maxDevTol) {
     final List<Offset> expectedPoints = checkpoints.points;
     if (stroke.isEmpty) return false;
-    if ((stroke.first - expectedPoints.first).distance > tolerance) return false;
-    if ((stroke.last - expectedPoints.last).distance > tolerance) return false;
+    if ((stroke.first - expectedPoints.first).distance > tolerance) {
+      return false;
+    }
+    if ((stroke.last - expectedPoints.last).distance > tolerance) {
+      return false;
+    }
 
     final List<int> hitIndices = [];
     int cpIndex = 0;
@@ -737,7 +684,9 @@ double distanceToSegment(Offset p, Offset a, Offset b) {
   return (p - closest).distance;
 }
 
-List<Offset> getEvenlyDistributedPointsDynamic(List<Offset> points, double desiredSpacing, {double snapThreshold = 10.0}) {
+List<Offset> getEvenlyDistributedPointsDynamic(
+    List<Offset> points, double desiredSpacing,
+    {double snapThreshold = 10.0}) {
   if (points.length < 2) return [];
   final Offset start = points.first;
   final Offset end = points.last;
@@ -765,7 +714,8 @@ List<Offset> getEvenlyDistributedPointsDynamic(List<Offset> points, double desir
   );
   final List<double> cumulative = [0.0];
   for (int i = 1; i < sampledPoints.length; i++) {
-    final double dist = (sampledPoints[i] - sampledPoints[i - 1]).distance;
+    final double dist =
+        (sampledPoints[i] - sampledPoints[i - 1]).distance;
     cumulative.add(cumulative.last + dist);
   }
   final double totalLength = cumulative.last;
@@ -776,12 +726,14 @@ List<Offset> getEvenlyDistributedPointsDynamic(List<Offset> points, double desir
   for (int i = 1; i <= count; i++) {
     final double target = spacing * i;
     int segmentIndex = 0;
-    while (segmentIndex < cumulative.length - 1 && cumulative[segmentIndex + 1] < target) {
+    while (segmentIndex < cumulative.length - 1 &&
+        cumulative[segmentIndex + 1] < target) {
       segmentIndex++;
     }
     final double segmentStart = cumulative[segmentIndex];
     final double segmentEnd = cumulative[segmentIndex + 1];
-    final double tLocal = (target - segmentStart) / (segmentEnd - segmentStart);
+    final double tLocal =
+        (target - segmentStart) / (segmentEnd - segmentStart);
     final Offset p0 = sampledPoints[segmentIndex];
     final Offset p1 = sampledPoints[segmentIndex + 1];
     final Offset interpolated = Offset(
@@ -873,7 +825,7 @@ class CheckpointPainter extends CustomPainter {
     // Draw completed strokes.
     if (completedStrokes.isNotEmpty) {
       final Paint completedPaint = Paint()
-        ..color = Color(0xFF32CD32) // LimeGreen
+        ..color = const Color(0xFF32CD32) // LimeGreen
         ..strokeWidth = 8
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round;
@@ -898,7 +850,7 @@ class CheckpointPainter extends CustomPainter {
     // Draw the current stroke.
     if (userStroke.isNotEmpty) {
       final Paint strokePaint = Paint()
-        ..color = Color(0xFF00BFFF) // DeepSkyBlue
+        ..color = const Color(0xFF00BFFF) // DeepSkyBlue
         ..strokeWidth = 8
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round;
@@ -914,8 +866,8 @@ class CheckpointPainter extends CustomPainter {
       final List<Offset> points = strokeCheckpoints!.points;
       for (int i = 0; i < points.length; i++) {
         final Color color = i == 0
-            ? Color(0xFF39FF14)
-            : (i == points.length - 1 ? Color(0xFFFF073A) : Colors.grey);
+            ? const Color(0xFF39FF14)
+            : (i == points.length - 1 ? const Color(0xFFFF073A) : Colors.grey);
         final double radius = (i == 0 || i == points.length - 1) ? 8.0 : 4.0;
         final Paint checkpointPaint = Paint()..color = color;
         canvas.drawCircle(points[i], radius, checkpointPaint);
