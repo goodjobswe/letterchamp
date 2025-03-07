@@ -243,7 +243,7 @@ class GameplayScreenState extends State<GameplayScreen>
         _resetUserStroke();
         return;
       }
-      valid = _isStrokeValid(_userStroke, expectedStroke, 20.0, 20.0);
+      valid = _isStrokeValid(_userStroke, expectedStroke, 25.0, 25.0);
       if (valid) {
         if (kDebugMode) print("Single stroke valid");
       } else if ((currentStrokeIndex + 1) < strokeCheckpointsList.length) {
@@ -259,8 +259,8 @@ class GameplayScreenState extends State<GameplayScreen>
             inBetween: combinedPoints.sublist(1, combinedPoints.length - 1),
             end: combinedPoints.last,
           ),
-          20.0,
-          20.0,
+          25.0,
+          25.0,
         );
         if (valid) {
           if (kDebugMode) print("Combined stroke (2 segments) is valid");
@@ -281,8 +281,8 @@ class GameplayScreenState extends State<GameplayScreen>
               tripleCombinedPoints.sublist(1, tripleCombinedPoints.length - 1),
               end: tripleCombinedPoints.last,
             ),
-            20.0,
-            20.0,
+            25.0,
+            25.0,
           );
           if (valid) {
             if (kDebugMode) print("Combined stroke (3 segments) is valid");
@@ -304,8 +304,8 @@ class GameplayScreenState extends State<GameplayScreen>
                     1, quadrupleCombinedPoints.length - 1),
                 end: quadrupleCombinedPoints.last,
               ),
-              20.0,
-              20.0,
+              25.0,
+              25.0,
             );
             if (valid) {
               if (kDebugMode) print("Combined stroke (4 segments) is valid");
