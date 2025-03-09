@@ -350,10 +350,10 @@ class SettingsScreenState extends State<SettingsScreen> {
                               Center(
                                 child: ElevatedButton(
                                   style: ButtonStyle(
-                                    backgroundColor: MaterialStateProperty.all(Colors.transparent),
-                                    elevation: MaterialStateProperty.all(0),
-                                    padding: MaterialStateProperty.all(EdgeInsets.zero),
-                                    shape: MaterialStateProperty.all(
+                                    backgroundColor: WidgetStateProperty.all(Colors.transparent),
+                                    elevation: WidgetStateProperty.all(0),
+                                    padding: WidgetStateProperty.all(EdgeInsets.zero),
+                                    shape: WidgetStateProperty.all(
                                       RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(20),
                                       ),
