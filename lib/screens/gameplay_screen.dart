@@ -27,6 +27,7 @@ class GameplayScreenState extends State<GameplayScreen>
   String _language = "en"; // default language
   bool _firstHelpUsed = false;
   bool _soundEffectsEnabled = false;
+  bool _hasDisplayedHighScoreMessage = false;
 
   // Tracing variables.
   List<Offset> _userStroke = [];
@@ -121,6 +122,17 @@ class GameplayScreenState extends State<GameplayScreen>
       letterStrokePaths[letter!] as List<StrokeCheckpoints>;
       _language = language; // Store language for later use.
       _soundEffectsEnabled = soundEffectsEnabled;
+    });
+
+    // Schedule the welcome message after the first frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_soundEffectsEnabled) {
+        SoundEffectsManager().playEffect('audio/start.wav');
+      }
+      final String welcomeMessage = _language == "sv"
+          ? "Nu kör vi! Rita din första bokstav och starta ditt äventyr!"
+          : "Let's get started! Draw your first letter and kick off your adventure!";
+      _showSnackBar(welcomeMessage);
     });
   }
 
@@ -247,7 +259,7 @@ class GameplayScreenState extends State<GameplayScreen>
         _resetUserStroke();
         return;
       }
-      valid = _isStrokeValid(_userStroke, expectedStroke, 25.0, 25.0);
+      valid = _isStrokeValid(_userStroke, expectedStroke, 30.0, 30.0);
       if (valid) {
         if (kDebugMode) print("Single stroke valid");
       } else if ((currentStrokeIndex + 1) < strokeCheckpointsList.length) {
@@ -263,8 +275,8 @@ class GameplayScreenState extends State<GameplayScreen>
             inBetween: combinedPoints.sublist(1, combinedPoints.length - 1),
             end: combinedPoints.last,
           ),
-          25.0,
-          25.0,
+          45.0,
+          45.0,
         );
         if (valid) {
           if (kDebugMode) print("Combined stroke (2 segments) is valid");
@@ -285,8 +297,8 @@ class GameplayScreenState extends State<GameplayScreen>
               tripleCombinedPoints.sublist(1, tripleCombinedPoints.length - 1),
               end: tripleCombinedPoints.last,
             ),
-            25.0,
-            25.0,
+            45.0,
+            45.0,
           );
           if (valid) {
             if (kDebugMode) print("Combined stroke (3 segments) is valid");
@@ -308,8 +320,8 @@ class GameplayScreenState extends State<GameplayScreen>
                     1, quadrupleCombinedPoints.length - 1),
                 end: quadrupleCombinedPoints.last,
               ),
-              25.0,
-              25.0,
+              45.0,
+              45.0,
             );
             if (valid) {
               if (kDebugMode) print("Combined stroke (4 segments) is valid");
@@ -347,6 +359,15 @@ class GameplayScreenState extends State<GameplayScreen>
     _completedStrokes.add(List.from(_userStroke));
     currentStrokeIndex += (1 + additionalSegments);
     if (currentStrokeIndex >= strokeCheckpointsList.length) {
+      if (_soundEffectsEnabled) {
+        SoundEffectsManager().playEffect('audio/complete.wav');
+      }
+
+      // Immediately clear the current (blue) stroke so only the green stroke shows.
+      setState(() {
+        _userStroke.clear();
+      });
+
       final int oldHighScore = await settingsService.getHighScore();
       final int oldHighestStreak = await settingsService.getHighestStreak();
       _streak++;
@@ -356,60 +377,58 @@ class GameplayScreenState extends State<GameplayScreen>
       });
       bool newHighScore = false;
       if (_score > oldHighScore) {
-        newHighScore = true;
+        if(!_hasDisplayedHighScoreMessage){
+          newHighScore = true;
+          _hasDisplayedHighScoreMessage = true;
+        }
         await settingsService.setHighScore(_score);
       }
       if (_streak > oldHighestStreak) {
         await settingsService.setHighestStreak(_streak);
       }
-      String streakMessage = _streak > 1
-          ? _language == "sv"
-          ? " $_streak i rad bonus!"
-          : " $_streak in a row bonus!"
-          : "";
-      String newHighScoreMessage = newHighScore
-          ? _language == "sv"
-          ? " Nytt rekord!"
-          : " New high score!"
-          : "";
       final Random random = Random();
       final List<String> englishGreetings = [
-        "Great job!",
-        "Awesome work!",
-        "Fantastic!",
-        "Brilliant!",
-        "Well done!",
-        "Superb!",
-        "Excellent!",
-        "Keep it up!",
-        "Outstanding!",
-        "You're on fire!"
+        "Great job!", "Awesome work!", "Fantastic!", "Brilliant!", "Well done!",
+        "Superb!", "Excellent!", "Keep it up!", "Outstanding!", "You're on fire!"
       ];
       final List<String> swedishGreetings = [
-        "Bra jobbat!",
-        "Fantastiskt!",
-        "Strålande!",
-        "Utmärkt!",
-        "Toppen!",
-        "Suveränt!",
-        "Jättebra!",
-        "Fortsätt så!",
-        "Enastående!",
-        "Du är grym!"
+        "Bra jobbat!", "Fantastiskt!", "Strålande!", "Utmärkt!", "Toppen!",
+        "Suveränt!", "Jättebra!", "Fortsätt så!", "Enastående!", "Du är grym!"
       ];
       final String greeting = _language == "sv"
           ? swedishGreetings[random.nextInt(swedishGreetings.length)]
           : englishGreetings[random.nextInt(englishGreetings.length)];
+      final String streakMessage = _streak > 1
+          ? _language == "sv"
+          ? " $_streak i rad bonus!"
+          : " $_streak in a row bonus!"
+          : "";
+      final String newHighScoreMessage = newHighScore
+          ? _language == "sv"
+          ? " Nytt rekord!"
+          : " New high score!"
+          : "";
       final String snackMessage = _language == "sv"
           ? "$greeting Du fick $bonus poäng.$streakMessage$newHighScoreMessage"
           : "$greeting You earned $bonus points.$streakMessage$newHighScoreMessage";
+
       _showSnackBar(snackMessage);
+
+      // Delay so the player can see the finished letter with the green stroke.
+      await Future.delayed(const Duration(seconds: 1)); // Adjust delay as needed.
       _nextLetter();
+    } else {
+      if (_soundEffectsEnabled) {
+        SoundEffectsManager().playEffect('audio/success.wav');
+      }
     }
   }
 
   /// Handles an invalid stroke by resetting the streak and deducting penalty points.
   void _handleInvalidStroke() {
+    if (_soundEffectsEnabled) {
+      SoundEffectsManager().playEffect('audio/fail.wav');
+    }
     _streak = 0;
     setState(() {
       _score -= _baseLetterPenalty;
@@ -508,7 +527,7 @@ class GameplayScreenState extends State<GameplayScreen>
                       iconSize: 36,
                       onPressed: () {
                         if (_soundEffectsEnabled) {
-                          SoundEffectsManager().playEffect('audio/button_click.mp3');
+                          SoundEffectsManager().playEffect('audio/button_click.wav');
                         }
                         Navigator.pop(context);
                         },
@@ -533,9 +552,9 @@ class GameplayScreenState extends State<GameplayScreen>
                         iconSize: 36,
                         onPressed: (){
                           if (_soundEffectsEnabled) {
-                            SoundEffectsManager().playEffect('audio/button_click.mp3');
+                            SoundEffectsManager().playEffect('audio/button_click.wav');
                           }
-                          _requestHelp;
+                          _requestHelp();
                           },
                       ),
                     ],
@@ -848,7 +867,7 @@ class CheckpointPainter extends CustomPainter {
         if (stroke.isNotEmpty) {
           if (stroke.length == 1) {
             final Paint fillPaint = Paint()
-              ..color = Colors.blue
+              ..color = const Color(0xFF32CD32) // LimeGreen
               ..style = PaintingStyle.fill;
             canvas.drawCircle(stroke.first, 8.0, fillPaint);
           } else {

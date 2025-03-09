@@ -43,9 +43,12 @@ class HighscoreScreenState extends State<HighscoreScreen> {
   // Resets the high score (and streak) in settings.
   Future<void> _resetHighScore() async {
     await settingsService.resetHighScore();
+    await settingsService.resetHighestStreak();
     final highScore = await settingsService.getHighScore();
+    final highestStreak = await settingsService.getHighestStreak();
     setState(() {
       _highScore = highScore;
+      _highestStreak = highestStreak;
     });
   }
 
@@ -76,7 +79,12 @@ class HighscoreScreenState extends State<HighscoreScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              if (_soundEffectsEnabled) {
+                SoundEffectsManager().playEffect('audio/cancel.wav');
+              }
+              Navigator.of(context).pop();
+            },
             child: Text(
               cancelText,
               style: _headerTextStyle(12),
@@ -84,6 +92,9 @@ class HighscoreScreenState extends State<HighscoreScreen> {
           ),
           TextButton(
             onPressed: () async {
+              if (_soundEffectsEnabled) {
+                SoundEffectsManager().playEffect('audio/button_click.wav');
+              }
               Navigator.of(context).pop();
               await _resetHighScore();
             },
@@ -117,10 +128,10 @@ class HighscoreScreenState extends State<HighscoreScreen> {
   Widget _buildMenuButton(String text, VoidCallback onPressed) {
     return ElevatedButton(
       style: ButtonStyle(
-        backgroundColor: WidgetStateProperty.all(Colors.transparent),
-        elevation: WidgetStateProperty.all(0),
-        padding: WidgetStateProperty.all(EdgeInsets.zero),
-        shape: WidgetStateProperty.all(
+        backgroundColor: MaterialStateProperty.all(Colors.transparent),
+        elevation: MaterialStateProperty.all(0),
+        padding: MaterialStateProperty.all(EdgeInsets.zero),
+        shape: MaterialStateProperty.all(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -155,10 +166,10 @@ class HighscoreScreenState extends State<HighscoreScreen> {
   Widget _buildResetButton(String text, VoidCallback onPressed) {
     return ElevatedButton(
       style: ButtonStyle(
-        backgroundColor: WidgetStateProperty.all(Colors.transparent),
-        elevation: WidgetStateProperty.all(0),
-        padding: WidgetStateProperty.all(EdgeInsets.zero),
-        shape: WidgetStateProperty.all(
+        backgroundColor: MaterialStateProperty.all(Colors.transparent),
+        elevation: MaterialStateProperty.all(0),
+        padding: MaterialStateProperty.all(EdgeInsets.zero),
+        shape: MaterialStateProperty.all(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -254,7 +265,8 @@ class HighscoreScreenState extends State<HighscoreScreen> {
                       iconSize: 36,
                       onPressed: () {
                         if (_soundEffectsEnabled) {
-                          SoundEffectsManager().playEffect('audio/button_click.mp3');
+                          SoundEffectsManager()
+                              .playEffect('audio/button_click.wav');
                         }
                         Navigator.pop(context);
                       },
@@ -267,46 +279,57 @@ class HighscoreScreenState extends State<HighscoreScreen> {
                     ),
                   ),
                   Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // High Score display.
-                          Text(
-                            highScoreLabel,
-                            style: _headerTextStyle(20),
+                    child: SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: MediaQuery.of(context).size.height -
+                              kToolbarHeight -
+                              MediaQuery.of(context).padding.top,
+                        ),
+                        child: IntrinsicHeight(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // High Score display.
+                              Text(
+                                highScoreLabel,
+                                style: _headerTextStyle(20),
+                              ),
+                              Text(
+                                _highScore.toString(),
+                                style: _headerTextStyle(28),
+                              ),
+                              const SizedBox(height: 20),
+                              // Highest Streak display.
+                              Text(
+                                streakLabel,
+                                style: _headerTextStyle(20),
+                              ),
+                              Text(
+                                _highestStreak.toString(),
+                                style: _headerTextStyle(28),
+                              ),
+                              const SizedBox(height: 36),
+                              // Main Menu Button.
+                              _buildMenuButton(mainMenuText, () {
+                                if (_soundEffectsEnabled) {
+                                  SoundEffectsManager()
+                                      .playEffect('audio/button_click.wav');
+                                }
+                                Navigator.pop(context);
+                              }),
+                              const SizedBox(height: 15),
+                              // Reset Button.
+                              _buildResetButton(resetText, () {
+                                if (_soundEffectsEnabled) {
+                                  SoundEffectsManager()
+                                      .playEffect('audio/button_click.wav');
+                                }
+                                _confirmReset();
+                              }),
+                            ],
                           ),
-                          Text(
-                            _highScore.toString(),
-                            style: _headerTextStyle(28),
-                          ),
-                          const SizedBox(height: 20),
-                          // Highest Streak display.
-                          Text(
-                            streakLabel,
-                            style: _headerTextStyle(20),
-                          ),
-                          Text(
-                            _highestStreak.toString(),
-                            style: _headerTextStyle(28),
-                          ),
-                          const SizedBox(height: 36),
-                          // Main Menu Button.
-                          _buildMenuButton(mainMenuText, () {
-                            if (_soundEffectsEnabled) {
-                              SoundEffectsManager().playEffect('audio/button_click.mp3');
-                            }
-                            Navigator.pop(context);
-                          }),
-                          const SizedBox(height: 15),
-                          // Reset Button.
-                          _buildResetButton(resetText, () {
-                            if (_soundEffectsEnabled) {
-                              SoundEffectsManager().playEffect('audio/button_click.mp3');
-                            }
-                            _confirmReset();
-                          }),
-                        ],
+                        ),
                       ),
                     ),
                   ),

@@ -9,7 +9,6 @@ import 'services/sound_effects_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   // Initialize the AudioManager and SoundEffectsManager singleton
   AudioManager();
   SoundEffectsManager();

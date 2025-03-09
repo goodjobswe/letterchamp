@@ -75,9 +75,9 @@ class SettingsScreenState extends State<SettingsScreen> {
       _musicEnabled = value;
     });
     if (value) {
-      AudioManager().startMusic();
+      AudioManager().play();
     } else {
-      AudioManager().stopMusic();
+      AudioManager().stop();
     }
   }
 
@@ -199,7 +199,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                       iconSize: 36,
                       onPressed: () {
                         if (_soundEffectsEnabled) {
-                          SoundEffectsManager().playEffect('audio/button_click.mp3');
+                          SoundEffectsManager().playEffect('audio/button_click.wav');
                         }
                         Navigator.pop(context);
                       },
@@ -215,171 +215,177 @@ class SettingsScreenState extends State<SettingsScreen> {
                   Expanded(
                     child: _isLoading
                         ? const Center(child: CircularProgressIndicator())
-                        : Center(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // Language Setting.
-                            Text(
-                              languageLabel,
-                              style: _appTextStyleShadow(18),
-                            ),
-                            const SizedBox(height: 8),
-                            _buildDropdown(
-                              _selectedLanguage,
-                              [
-                                DropdownMenuItem(
-                                  value: 'en',
-                                  child: Text(
-                                    englishText,
-                                    style: _appTextStyle(14),
+                        : SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: MediaQuery.of(context).size.height -
+                              kToolbarHeight -
+                              MediaQuery.of(context).padding.top,
+                        ),
+                        child: IntrinsicHeight(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Language Setting.
+                              Text(
+                                languageLabel,
+                                style: _appTextStyleShadow(18),
+                              ),
+                              const SizedBox(height: 8),
+                              _buildDropdown(
+                                _selectedLanguage,
+                                [
+                                  DropdownMenuItem(
+                                    value: 'en',
+                                    child: Text(
+                                      englishText,
+                                      style: _appTextStyle(14),
+                                    ),
                                   ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'sv',
-                                  child: Text(
-                                    swedishText,
-                                    style: _appTextStyle(14),
+                                  DropdownMenuItem(
+                                    value: 'sv',
+                                    child: Text(
+                                      swedishText,
+                                      style: _appTextStyle(14),
+                                    ),
                                   ),
-                                ),
-                              ],
-                              _updateLanguage,
-                            ),
-                            const SizedBox(height: 16),
-                            // Game Mode Setting.
-                            Text(
-                              gameModeLabel,
-                              style: _appTextStyleShadow(18),
-                            ),
-                            const SizedBox(height: 8),
-                            _buildDropdown(
-                              _selectedGameMode,
-                              [
-                                DropdownMenuItem(
-                                  value: 'uppercase',
-                                  child: Text(
-                                    uppercaseText,
-                                    style: _appTextStyle(14),
+                                ],
+                                _updateLanguage,
+                              ),
+                              const SizedBox(height: 16),
+                              // Game Mode Setting.
+                              Text(
+                                gameModeLabel,
+                                style: _appTextStyleShadow(18),
+                              ),
+                              const SizedBox(height: 8),
+                              _buildDropdown(
+                                _selectedGameMode,
+                                [
+                                  DropdownMenuItem(
+                                    value: 'uppercase',
+                                    child: Text(
+                                      uppercaseText,
+                                      style: _appTextStyle(14),
+                                    ),
                                   ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'lowercase',
-                                  child: Text(
-                                    lowercaseText,
-                                    style: _appTextStyle(14),
+                                  DropdownMenuItem(
+                                    value: 'lowercase',
+                                    child: Text(
+                                      lowercaseText,
+                                      style: _appTextStyle(14),
+                                    ),
                                   ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'random',
-                                  child: Text(
-                                    randomText,
-                                    style: _appTextStyle(14),
+                                  DropdownMenuItem(
+                                    value: 'random',
+                                    child: Text(
+                                      randomText,
+                                      style: _appTextStyle(14),
+                                    ),
                                   ),
-                                ),
-                              ],
-                              _updateGameMode,
-                            ),
-                            const SizedBox(height: 16),
-                            // Letter Order Setting.
-                            Text(
-                              letterOrderLabel,
-                              style: _appTextStyleShadow(18),
-                            ),
-                            const SizedBox(height: 8),
-                            _buildDropdown(
-                              _selectedLetterOrder,
-                              [
-                                DropdownMenuItem(
-                                  value: 'alphabetic',
-                                  child: Text(
-                                    alphabeticText,
-                                    style: _appTextStyle(14),
+                                ],
+                                _updateGameMode,
+                              ),
+                              const SizedBox(height: 16),
+                              // Letter Order Setting.
+                              Text(
+                                letterOrderLabel,
+                                style: _appTextStyleShadow(18),
+                              ),
+                              const SizedBox(height: 8),
+                              _buildDropdown(
+                                _selectedLetterOrder,
+                                [
+                                  DropdownMenuItem(
+                                    value: 'alphabetic',
+                                    child: Text(
+                                      alphabeticText,
+                                      style: _appTextStyle(14),
+                                    ),
                                   ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'random',
-                                  child: Text(
-                                    randomOrderText,
-                                    style: _appTextStyle(14),
+                                  DropdownMenuItem(
+                                    value: 'random',
+                                    child: Text(
+                                      randomOrderText,
+                                      style: _appTextStyle(14),
+                                    ),
                                   ),
-                                ),
-                              ],
-                              _updateLetterOrder,
-                            ),
-                            const SizedBox(height: 32),
-                            // Music Toggle.
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  musicText,
-                                  style: _appTextStyleShadow(18),
-                                ),
-                                Switch(
-                                  value: _musicEnabled,
-                                  onChanged: _updateMusicEnabled,
-                                  activeColor: Colors.white,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            // Sound Effects Toggle.
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  soundEffectsText,
-                                  style: _appTextStyleShadow(18),
-                                ),
-                                Switch(
-                                  value: _soundEffectsEnabled,
-                                  onChanged: _updateSoundEffectsEnabled,
-                                  activeColor: Colors.white,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 32),
-                            // Main Menu Button.
-                            Center(
-                              child: ElevatedButton(
-                                style: ButtonStyle(
-                                  backgroundColor: WidgetStateProperty.all(Colors.transparent),
-                                  elevation: WidgetStateProperty.all(0),
-                                  padding: WidgetStateProperty.all(EdgeInsets.zero),
-                                  shape: WidgetStateProperty.all(
-                                    RoundedRectangleBorder(
+                                ],
+                                _updateLetterOrder,
+                              ),
+                              const SizedBox(height: 32),
+                              // Music Toggle.
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    musicText,
+                                    style: _appTextStyleShadow(18),
+                                  ),
+                                  Switch(
+                                    value: _musicEnabled,
+                                    onChanged: _updateMusicEnabled,
+                                    activeColor: Colors.white,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              // Sound Effects Toggle.
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    soundEffectsText,
+                                    style: _appTextStyleShadow(18),
+                                  ),
+                                  Switch(
+                                    value: _soundEffectsEnabled,
+                                    onChanged: _updateSoundEffectsEnabled,
+                                    activeColor: Colors.white,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 32),
+                              // Main Menu Button.
+                              Center(
+                                child: ElevatedButton(
+                                  style: ButtonStyle(
+                                    backgroundColor: MaterialStateProperty.all(Colors.transparent),
+                                    elevation: MaterialStateProperty.all(0),
+                                    padding: MaterialStateProperty.all(EdgeInsets.zero),
+                                    shape: MaterialStateProperty.all(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    if (_soundEffectsEnabled) {
+                                      SoundEffectsManager().playEffect('audio/button_click.wav');
+                                    }
+                                    Navigator.pop(context);
+                                  },
+                                  child: Ink(
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xfff45d27), Color(0xfff5851f)],
+                                      ),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
-                                  ),
-                                ),
-                                onPressed: (){
-                                  if (_soundEffectsEnabled) {
-                                    SoundEffectsManager().playEffect('audio/button_click.mp3');
-                                  }
-                                  Navigator.pop(context);
-                                },
-                                child: Ink(
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xfff45d27), Color(0xfff5851f)],
-                                    ),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Container(
-                                    constraints: const BoxConstraints(minWidth: 150, minHeight: 50),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      mainMenuText,
-                                      style: _appTextStyle(16),
+                                    child: Container(
+                                      constraints: const BoxConstraints(minWidth: 150, minHeight: 50),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        mainMenuText,
+                                        style: _appTextStyle(16),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 16),
-                          ],
+                              const SizedBox(height: 16),
+                            ],
+                          ),
                         ),
                       ),
                     ),

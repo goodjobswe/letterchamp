@@ -98,9 +98,9 @@ class InstructionScreenState extends State<InstructionScreen>
     },
     {
       "sv":
-      "Fantastiskt!\n\nVissa bokstäver kan ritas med en kontinuerlig linje.\n\nDra fingret för att rita hela bokstaven.",
+      "Vissa bokstäver kan ritas med en kontinuerlig linje.\n\nDra fingret för att rita hela bokstaven.",
       "en":
-      "Great!\n\nSome letters can be drawn with one continuous stroke.\n\nDrag your finger to draw the whole letter."
+      "Some letters can be drawn with one continuous stroke.\n\nDrag your finger to draw the whole letter."
     },
     {
       "sv":
@@ -307,7 +307,7 @@ class InstructionScreenState extends State<InstructionScreen>
                       onPressed: () {
                         if (_soundEffectsEnabled) {
                           SoundEffectsManager()
-                              .playEffect('audio/button_click.mp3');
+                              .playEffect('audio/button_click.wav');
                         }
                         Navigator.pop(context);
                       },
@@ -326,7 +326,7 @@ class InstructionScreenState extends State<InstructionScreen>
                         iconSize: 36,
                         onPressed: () {
                           if (_soundEffectsEnabled) {
-                            SoundEffectsManager().playEffect('audio/button_click.mp3');
+                            SoundEffectsManager().playEffect('audio/button_click.wav');
                           }
                           if (_helpStepIndex == 4) {
                             setState(() {
@@ -384,6 +384,9 @@ class InstructionScreenState extends State<InstructionScreen>
                               }
                               valid = _isStrokeValid(_userStroke, expectedStroke, 20.0, 20.0);
                               if (valid) {
+                                if (_soundEffectsEnabled) {
+                                  SoundEffectsManager().playEffect('audio/success.wav');
+                                }
                                 setState(() {
                                   _helpStepIndex++;
                                   if (_helpStepIndex == 4) {
@@ -391,12 +394,25 @@ class InstructionScreenState extends State<InstructionScreen>
                                     columnAlignment = MainAxisAlignment.center;
                                   }
                                 });
+                              } else {
+                                if (_soundEffectsEnabled) {
+                                  SoundEffectsManager().playEffect('audio/fail.wav');
+                                }
                               }
                               if (currentStrokeIndex < strokeCheckpointsList.length && valid) {
                                 _completedStrokes.add(List.from(_userStroke));
                                 currentStrokeIndex++;
                                 if (currentStrokeIndex == strokeCheckpointsList.length) {
+                                  if (_soundEffectsEnabled) {
+                                    SoundEffectsManager().playEffect('audio/complete.wav');
+                                  }
+                                  // Clear the blue stroke immediately so the green one is visible.
+                                  setState(() {
+                                    _userStroke = [];
+                                  });
+                                  await Future.delayed(const Duration(seconds: 1)); // Delay to show green stroke.
                                   _nextLetter();
+                                  return;
                                 }
                               }
                               setState(() {
@@ -449,7 +465,7 @@ class InstructionScreenState extends State<InstructionScreen>
                             child: _buildMainMenuButton(mainMenuText, () {
                               if (_soundEffectsEnabled) {
                                 SoundEffectsManager()
-                                    .playEffect('audio/button_click.mp3');
+                                    .playEffect('audio/button_click.wav');
                               }
                               Navigator.pop(context);
                             }),

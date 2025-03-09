@@ -20,31 +20,24 @@ class LandingScreenState extends State<LandingScreen> {
   @override
   void initState() {
     super.initState();
-    _loadLanguage();
-    _loadMusic();
-    _loadSoundEffects();
+    _loadSettings();
   }
 
-  Future<void> _loadLanguage() async {
+  Future<void> _loadSettings() async {
     await settingsService.init();
     final language = await settingsService.getLanguage();
     setState(() {
       _language = language;
       _isLoading = false;
     });
-  }
 
-  Future<void> _loadMusic() async {
-    // Assuming you have a SettingsService similar to your other code:
     final musicEnabled = await settingsService.getMusicEnabled();
     if (musicEnabled) {
-      AudioManager().startMusic();
+      AudioManager().play();
     } else {
-      AudioManager().stopMusic();
+      AudioManager().stop();
     }
-  }
 
-  Future<void> _loadSoundEffects() async {
     final soundEffectsEnabled = await settingsService.getSoundEffectsEnabled();
     _soundEffectsEnabled = soundEffectsEnabled;
   }
@@ -57,9 +50,6 @@ class LandingScreenState extends State<LandingScreen> {
   }
 
   /// Combined helper for both primary and secondary game buttons.
-  /// - [primary] determines the style: primary uses a gradient background and white text,
-  ///   secondary uses a neutral background and grey text.
-  /// - [reloadOnReturn] optionally reloads language after returning from the route.
   Widget _buildGameButton(
       BuildContext context, String text, String route,
       {bool primary = true, bool reloadOnReturn = false}) {
@@ -76,11 +66,11 @@ class LandingScreenState extends State<LandingScreen> {
       ),
       onPressed: () {
         if (_soundEffectsEnabled) {
-          SoundEffectsManager().playEffect('audio/button_click.mp3');
+          SoundEffectsManager().playEffect('audio/button_click.wav');
         }
         if (reloadOnReturn) {
           Navigator.pushNamed(context, route)
-              .then((_) => _loadLanguage());
+              .then((_) => _loadSettings());
         } else {
           Navigator.pushNamed(context, route);
         }
@@ -154,78 +144,87 @@ class LandingScreenState extends State<LandingScreen> {
           ),
           // Content.
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Column(
-                children: [
-                  // Custom transparent AppBar.
-                  AppBar(
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    centerTitle: true,
-                    title: Text(
-                      welcomeTitle,
-                      style: GoogleFonts.pressStart2p(
-                        textStyle: const TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(
-                              blurRadius: 10,
-                              color: Colors.black,
-                              offset: Offset(2, 2),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: MediaQuery.of(context).size.height,
+                  ),
+                  child: Column(
+                    children: [
+                      // Custom transparent AppBar.
+                      AppBar(
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        centerTitle: true,
+                        title: Text(
+                          welcomeTitle,
+                          style: GoogleFonts.pressStart2p(
+                            textStyle: const TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  blurRadius: 10,
+                                  color: Colors.black,
+                                  offset: Offset(2, 2),
+                                ),
+                              ],
                             ),
+                          ),
+                        ),
+                      ),
+                      // Main content.
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            // Welcome text.
+                            Text(
+                              welcomeText,
+                              style: GoogleFonts.pressStart2p(
+                                textStyle: const TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                  shadows: [
+                                    Shadow(
+                                      blurRadius: 10,
+                                      color: Colors.black,
+                                      offset: Offset(2, 2),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                            // Game character image.
+                            Image.asset(
+                              'assets/images/game_character.png',
+                              width: 200,
+                              height: 200,
+                              fit: BoxFit.contain,
+                            ),
+                            const SizedBox(height: 30),
+                            // Primary game button.
+                            _buildGameButton(context, startDrawingText, '/gameplay'),
+                            const SizedBox(height: 15),
+                            // Secondary buttons.
+                            _buildGameButton(context, highScoresText, '/highscore',
+                                primary: false, reloadOnReturn: true),
+                            const SizedBox(height: 15),
+                            _buildGameButton(context, instructionsText, '/instructions',
+                                primary: false, reloadOnReturn: true),
+                            const SizedBox(height: 15),
+                            _buildGameButton(context, settingsText, '/settings',
+                                primary: false, reloadOnReturn: true),
                           ],
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          // Welcome text.
-                          Text(
-                            welcomeText,
-                            style: GoogleFonts.pressStart2p(
-                              textStyle: const TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    blurRadius: 10,
-                                    color: Colors.black,
-                                    offset: Offset(2, 2),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 20),
-                          // Game character image.
-                          Image.asset(
-                            'assets/images/game_character.png',
-                            width: 200,
-                            height: 200,
-                            fit: BoxFit.contain,
-                          ),
-                          const SizedBox(height: 30),
-                          // Primary game button.
-                          _buildGameButton(context, startDrawingText, '/gameplay'),
-                          const SizedBox(height: 15),
-                          // Secondary buttons.
-                          _buildGameButton(context, highScoresText, '/highscore', primary: false, reloadOnReturn: true),
-                          const SizedBox(height: 15),
-                          _buildGameButton(context, instructionsText, '/instructions', primary: false, reloadOnReturn: true),
-                          const SizedBox(height: 15),
-                          _buildGameButton(context, settingsText, '/settings', primary: false, reloadOnReturn: true),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
