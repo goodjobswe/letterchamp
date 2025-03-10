@@ -800,4 +800,114 @@ final Map<String, List<StrokeCheckpoints>> letterStrokePaths = {
       end: Offset(174, 51),
     ),
   ],
+  '0': [
+    const StrokeCheckpoints(
+      start: Offset(150, 48),
+      inBetween: [Offset(117.9, 56.6), Offset(97.1, 78.9), Offset(91.2, 111.5), Offset(88.5, 145.4), Offset(88.5, 181.9), Offset(99.8, 212.3), Offset(120.1, 236.3), Offset(153.4, 242.8), Offset(185.1, 234.4), Offset(203.3, 207.3), Offset(213.4, 176.7), Offset(213.4, 140.2), Offset(210.9, 104.6), Offset(204.6, 71.7), Offset(177.7, 55.0)],
+      end: Offset(150, 48),
+    ),
+  ],
+  '1': [
+    const StrokeCheckpoints(
+      start: Offset(123, 50),
+      inBetween: [Offset(157, 50), Offset(156, 92.7), Offset(156, 130.1), Offset(156, 168.9), Offset(156, 207.8)],
+      end: Offset(156, 245),
+    ),
+  ],
+  '2': [
+    const StrokeCheckpoints(
+      start: Offset(95, 93),
+      inBetween: [Offset(107.6, 65.8), Offset(134.0, 48.1), Offset(168.2, 48.9), Offset(191.5, 68.7), Offset(199.2, 98.8), Offset(192.0, 131.2), Offset(175.6, 157.5), Offset(160.6, 182.1), Offset(134.8, 199.2), Offset(111.1, 222.0)],
+      end: Offset(93, 242),
+    ),
+    const StrokeCheckpoints(
+      start: Offset(93, 242),
+      inBetween: [Offset(133.2, 242), Offset(171.4, 242)],
+      end: Offset(213, 242),
+    ),
+  ],
+  '3': [
+    const StrokeCheckpoints(
+      start: Offset(95, 83),
+      inBetween: [Offset(114.8, 58.2), Offset(146.8, 46.8), Offset(181.1, 53.2), Offset(198.8, 77.0), Offset(197.3, 111.6), Offset(171.7, 132.0)],
+      end: Offset(140, 142),
+    ),
+    const StrokeCheckpoints(
+      start: Offset(140, 142),
+      inBetween: [Offset(171.5, 150.5), Offset(196.8, 168.3), Offset(206.9, 197.4), Offset(192.7, 226.8), Offset(169.1, 243.4), Offset(133.1, 245.6), Offset(106.5, 229.6)],
+      end: Offset(91, 203),
+    ),
+  ],
+  '4': [
+    const StrokeCheckpoints(
+      start: Offset(193, 43),
+      inBetween: [Offset(169.8, 73.1), Offset(146.8, 103.8), Offset(123.9, 134.4), Offset(100.9, 165.1)],
+      end: Offset(78, 195),
+    ),
+    const StrokeCheckpoints(
+      start: Offset(78, 195),
+      inBetween: [Offset(116.8, 195), Offset(154.1, 195), Offset(191.4, 195)],
+      end: Offset(227, 195),
+    ),
+    const StrokeCheckpoints(
+      start: Offset(193, 43),
+      inBetween: [Offset(193, 90.5), Offset(193, 130.5), Offset(193, 170.5), Offset(193, 210.5)],
+      end: Offset(193, 251),
+    ),
+  ],
+  '5': [
+    const StrokeCheckpoints(
+      start: Offset(95, 52),
+      inBetween: [Offset(95, 98.7)],
+      end: Offset(95, 154),
+    ),
+    const StrokeCheckpoints(
+      start: Offset(95, 154),
+      inBetween: [Offset(118.7, 134.2), Offset(146.4, 123.1), Offset(180.4, 121.8), Offset(200.0, 141.9), Offset(210.9, 169.7), Offset(214.3, 201.1), Offset(195.2, 226.1), Offset(167.9, 241.6), Offset(133.0, 242.6), Offset(106.9, 229.6)],
+      end: Offset(95, 205),
+    ),
+    const StrokeCheckpoints(
+      start: Offset(95, 52),
+      inBetween: [Offset(130.2, 52), Offset(166.7, 52)],
+      end: Offset(204, 52),
+    ),
+  ],
+  '6': [
+    const StrokeCheckpoints(
+      start: Offset(205, 79),
+      inBetween: [Offset(189.2, 57.9), Offset(160.9, 46.2), Offset(126.8, 47.9), Offset(102.3, 67.3), Offset(91.2, 97.5), Offset(88.5, 132.5), Offset(87.2, 167.8), Offset(95.4, 200.0), Offset(110.8, 227.4), Offset(137.9, 243.6), Offset(173.1, 243.7), Offset(197.7, 226.5), Offset(211.8, 198.4), Offset(214.6, 164.5), Offset(196.8, 139.7), Offset(168.5, 127.1), Offset(136.2, 125.3), Offset(112.5, 143.9)],
+      end: Offset(92, 169),
+    ),
+  ],
+  '7': [
+    const StrokeCheckpoints(
+      start: Offset(88, 50),
+      inBetween: [Offset(128.2, 50), Offset(167.1, 50)],
+      end: Offset(212, 50),
+    ),
+    const StrokeCheckpoints(
+      start: Offset(212, 50),
+      inBetween: [Offset(197.6, 81.0), Offset(183.4, 113.9), Offset(169.2, 146.8), Offset(155.0, 179.7), Offset(140.8, 212.7)],
+      end: Offset(128, 248),
+    ),
+  ],
+  '8': [
+    const StrokeCheckpoints(
+      start: Offset(150, 48),
+      inBetween: [Offset(119.8, 54.5), Offset(94.9, 72.5), Offset(93.6, 108.0), Offset(111.7, 133.4), Offset(144.2, 142.9), Offset(176.1, 149.8), Offset(202.0, 167.1), Offset(212.4, 197.7), Offset(200.6, 228.4), Offset(175.3, 248.8), Offset(140.8, 251.4), Offset(110.8, 240.0), Offset(91.2, 218.4), Offset(87.2, 184.9), Offset(106.1, 160.5), Offset(133.5, 143.4), Offset(166.9, 138.3), Offset(197.0, 127.1), Offset(210.4, 100.7), Offset(204.2, 70.8), Offset(178.8, 54.3)],
+      end: Offset(150, 48),
+    ),
+  ],
+  '9': [
+    const StrokeCheckpoints(
+      start: Offset(202, 73),
+      inBetween: [Offset(166.8, 50.5), Offset(132.3, 46.8), Offset(104.7, 63.2), Offset(92.1, 93.9), Offset(96.7, 128.2), Offset(116.0, 154.2), Offset(148.5, 161.0), Offset(181.3, 154.8), Offset(204.2, 132.5), Offset(208.5, 98.1)],
+      end: Offset(202, 73),
+    ),
+    const StrokeCheckpoints(
+      start: Offset(202, 73),
+      inBetween: [Offset(208.1, 91.6), Offset(213.5, 125.0), Offset(213.4, 161.2), Offset(206.0, 192.0), Offset(196.4, 221.3), Offset(171.3, 238.0), Offset(138.0, 244.9), Offset(110.5, 230.2)],
+      end: Offset(99, 205),
+    ),
+  ],
 };

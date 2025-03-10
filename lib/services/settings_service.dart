@@ -11,6 +11,9 @@ class SettingsService {
   static const String _musicEnabledKey = 'musicEnabled';
   static const String _soundEffectsEnabledKey = 'soundEffectsEnabled';
 
+  // New key for numbers support.
+  static const String _numbersEnabledKey = 'numbersEnabled';
+
   SharedPreferences? _prefs;
 
   /// Initializes the SharedPreferences instance.
@@ -112,5 +115,17 @@ class SettingsService {
   Future<void> setSoundEffectsEnabled(bool enabled) async {
     _prefs ??= await SharedPreferences.getInstance();
     await _prefs!.setBool(_soundEffectsEnabledKey, enabled);
+  }
+
+  /// Retrieves whether numbers are enabled. Defaults to false.
+  Future<bool> getNumbersEnabled() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!.getBool(_numbersEnabledKey) ?? false;
+  }
+
+  /// Sets whether numbers are enabled.
+  Future<void> setNumbersEnabled(bool enabled) async {
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setBool(_numbersEnabledKey, enabled);
   }
 }

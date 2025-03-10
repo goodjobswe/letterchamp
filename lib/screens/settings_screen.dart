@@ -20,6 +20,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   String _selectedLetterOrder = 'alphabetic';
   bool _musicEnabled = true;
   bool _soundEffectsEnabled = true;
+  bool _numbersEnabled = false; // New variable for NumbersEnabled
   bool _isLoading = true;
 
   @override
@@ -34,6 +35,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     final letterOrder = await _settingsService.getLetterOrder();
     final musicEnabled = await _settingsService.getMusicEnabled();
     final soundEffectsEnabled = await _settingsService.getSoundEffectsEnabled();
+    final numbersEnabled = await _settingsService.getNumbersEnabled(); // Load numbers setting
 
     setState(() {
       _selectedLanguage = language;
@@ -41,6 +43,7 @@ class SettingsScreenState extends State<SettingsScreen> {
       _selectedLetterOrder = letterOrder;
       _musicEnabled = musicEnabled;
       _soundEffectsEnabled = soundEffectsEnabled;
+      _numbersEnabled = numbersEnabled;
       _isLoading = false;
     });
   }
@@ -85,6 +88,14 @@ class SettingsScreenState extends State<SettingsScreen> {
     await _settingsService.setSoundEffectsEnabled(value);
     setState(() {
       _soundEffectsEnabled = value;
+    });
+  }
+
+  // New function to update numbers enabled state.
+  void _updateNumbersEnabled(bool value) async {
+    await _settingsService.setNumbersEnabled(value);
+    setState(() {
+      _numbersEnabled = value;
     });
   }
 
@@ -151,6 +162,8 @@ class SettingsScreenState extends State<SettingsScreen> {
     _selectedLanguage == 'sv' ? 'Musik' : 'Music';
     final String soundEffectsText =
     _selectedLanguage == 'sv' ? 'Ljud Effekter' : 'Sound Effects';
+    final String numbersText =
+    _selectedLanguage == 'sv' ? 'Siffror' : 'Numbers'; // New label for Numbers
     final String englishText =
     _selectedLanguage == 'sv' ? 'Engelska' : 'English';
     final String swedishText =
@@ -341,6 +354,22 @@ class SettingsScreenState extends State<SettingsScreen> {
                                   Switch(
                                     value: _soundEffectsEnabled,
                                     onChanged: _updateSoundEffectsEnabled,
+                                    activeColor: Colors.white,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              // Numbers Toggle.
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    numbersText,
+                                    style: _appTextStyleShadow(18),
+                                  ),
+                                  Switch(
+                                    value: _numbersEnabled,
+                                    onChanged: _updateNumbersEnabled,
                                     activeColor: Colors.white,
                                   ),
                                 ],

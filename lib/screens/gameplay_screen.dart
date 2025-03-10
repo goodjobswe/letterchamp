@@ -84,6 +84,7 @@ class GameplayScreenState extends State<GameplayScreen>
     final gameMode = await settingsService.getGameMode();
     final letterOrder = await settingsService.getLetterOrder();
     final soundEffectsEnabled = await settingsService.getSoundEffectsEnabled();
+    final numbersEnabled = await settingsService.getNumbersEnabled();
 
     // Generate the basic English alphabet.
     List<String> letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -91,6 +92,11 @@ class GameplayScreenState extends State<GameplayScreen>
     // If language is Swedish, add å, ä, ö.
     if (language == 'sv') {
       letters.addAll(['å', 'ä', 'ö']);
+    }
+
+    // If numbers
+    if (numbersEnabled) {
+      letters.addAll(['0','1','2','3','4','5','6','7','8','9']);
     }
 
     // Determine letter order.
@@ -232,9 +238,7 @@ class GameplayScreenState extends State<GameplayScreen>
   Future<void> _processUserStroke() async {
     final List<Offset> inBetween =
     getEvenlyDistributedPointsDynamic(_userStroke, 35.0);
-    if (kDebugMode) {
-      print("inBetween: $inBetween");
-    }
+    if (kDebugMode) print("inBetween: $inBetween");
     final expectedStroke = strokeCheckpointsList[currentStrokeIndex];
     bool valid = false;
     int additionalSegments = 0;
@@ -253,9 +257,7 @@ class GameplayScreenState extends State<GameplayScreen>
     } else {
       final double totalDistance = _calculateStrokeDistance(_userStroke);
       if (_userStroke.isEmpty || totalDistance < 20.0) {
-        if (kDebugMode) {
-          print("Stroke too short, ignoring. Total distance: $totalDistance");
-        }
+        if (kDebugMode) print("Stroke too short, ignoring. Total distance: $totalDistance");
         _resetUserStroke();
         return;
       }
@@ -275,8 +277,8 @@ class GameplayScreenState extends State<GameplayScreen>
             inBetween: combinedPoints.sublist(1, combinedPoints.length - 1),
             end: combinedPoints.last,
           ),
-          45.0,
-          45.0,
+          30.0,
+          50.0,
         );
         if (valid) {
           if (kDebugMode) print("Combined stroke (2 segments) is valid");
@@ -297,8 +299,8 @@ class GameplayScreenState extends State<GameplayScreen>
               tripleCombinedPoints.sublist(1, tripleCombinedPoints.length - 1),
               end: tripleCombinedPoints.last,
             ),
-            45.0,
-            45.0,
+            30.0,
+            55.0,
           );
           if (valid) {
             if (kDebugMode) print("Combined stroke (3 segments) is valid");
@@ -320,8 +322,8 @@ class GameplayScreenState extends State<GameplayScreen>
                     1, quadrupleCombinedPoints.length - 1),
                 end: quadrupleCombinedPoints.last,
               ),
-              45.0,
-              45.0,
+              30.0,
+              60.0,
             );
             if (valid) {
               if (kDebugMode) print("Combined stroke (4 segments) is valid");
@@ -490,8 +492,10 @@ class GameplayScreenState extends State<GameplayScreen>
       );
     }
 
-    final String appBarTitle =
-    _language == "sv" ? "Bokstav: $letter" : "Letter: $letter";
+    final bool isNumeric = RegExp(r'^\d+$').hasMatch(letter!);
+    final String appBarTitle = _language == "sv"
+        ? (isNumeric ? "Siffra: $letter" : "Bokstav: $letter")
+        : (isNumeric ? "Number: $letter" : "Letter: $letter");
     final String scoreText =
     _language == "sv" ? "Poäng: $_score" : "Score: $_score";
 
@@ -596,9 +600,7 @@ class GameplayScreenState extends State<GameplayScreen>
                                 (details.localPosition -
                                     Offset(dx, dy)) /
                                     scale;
-                            if (kDebugMode) {
-                              print("Offset: $designPos");
-                            }
+                            if (kDebugMode) print("Offset: $designPos");
                             setState(() {
                               _userStroke = [designPos];
                               _showHelp = false;
@@ -672,18 +674,20 @@ class GameplayScreenState extends State<GameplayScreen>
       List<Offset> stroke,
       StrokeCheckpoints checkpoints,
       double tolerance,
-      double maxDevTol) {
+      double maxDevTol,
+      ) {
     final List<Offset> expectedPoints = checkpoints.points;
     if (stroke.isEmpty) return false;
+
+    // Check that the stroke starts near the expected start.
     if ((stroke.first - expectedPoints.first).distance > tolerance) {
-      return false;
-    }
-    if ((stroke.last - expectedPoints.last).distance > tolerance) {
+      if(kDebugMode) print("The stroke did not start at the right place");
       return false;
     }
 
     final List<int> hitIndices = [];
     int cpIndex = 0;
+    // Collect indices where each expected checkpoint is hit.
     for (int i = 0; i < stroke.length; i++) {
       if (cpIndex >= expectedPoints.length) break;
       if ((stroke[i] - expectedPoints[cpIndex]).distance <= tolerance) {
@@ -691,8 +695,23 @@ class GameplayScreenState extends State<GameplayScreen>
         cpIndex++;
       }
     }
-    if (hitIndices.length != expectedPoints.length) return false;
+    if (hitIndices.length != expectedPoints.length) {
+      if(kDebugMode) print("The stroke did not hit all checkpoints");
+      return false;
+    }
 
+    // Ensure that any stroke points after the last matched checkpoint remain
+    // within tolerance of the expected end. This prevents extra stray offsets.
+    int lastHit = hitIndices.last;
+    for (int i = lastHit; i < stroke.length; i++) {
+      if ((stroke[i] - expectedPoints.last).distance > tolerance) {
+        if(kDebugMode) print("The stroke hit all checkpoints but contains lines to far away from checkpoints");
+        return false;
+      }
+    }
+
+    // For each segment between consecutive checkpoints,
+    // ensure the stroke doesn’t deviate too far.
     for (int j = 0; j < hitIndices.length - 1; j++) {
       int startIndex = hitIndices[j];
       int endIndex = hitIndices[j + 1];
@@ -700,7 +719,10 @@ class GameplayScreenState extends State<GameplayScreen>
       final Offset p2 = expectedPoints[j + 1];
       for (int k = startIndex; k <= endIndex; k++) {
         final double d = distanceToSegment(stroke[k], p1, p2);
-        if (d > maxDevTol) return false;
+        if (d > maxDevTol) {
+          if(kDebugMode) print("The stroke deviates to far from the expected path");
+          return false;
+        }
       }
     }
     return true;
