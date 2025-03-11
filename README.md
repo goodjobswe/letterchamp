@@ -32,4 +32,4 @@ The game loads user settings to generate a list of letters (including additional
   - The interface adapts text and labels based on the selected language (English or Swedish).
 
 ## Screenshots:
-<img src="[https://your-image-link.com/image.png](https://github.com/goodjobswe/letterchamp/blob/main/assets/screenshots/Screenshot_20250311_180811.jpg)" width="300">
+<img src="[https://github.com/goodjobswe/letterchamp/blob/main/assets/screenshots/Screenshot_20250311_180811.jpg]" width="300">
