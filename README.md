@@ -35,3 +35,5 @@ The game loads user settings to generate a list of letters (including additional
 <img src="https://github.com/goodjobswe/letterchamp/blob/main/assets/screenshots/Screenshot_20250311_180837.jpg" width="300">
 <img src="https://github.com/goodjobswe/letterchamp/blob/main/assets/screenshots/Screenshot_20250311_180842.jpg" width="300">
 <img src="https://github.com/goodjobswe/letterchamp/blob/main/assets/screenshots/Screenshot_20250311_181029.jpg" width="300">
+<img src="https://github.com/goodjobswe/letterchamp/blob/main/assets/screenshots/Screenshot_20250311_191947.jpg" width="300">
+<img src="https://github.com/goodjobswe/letterchamp/blob/main/assets/screenshots/Screenshot_20250311_192023.jpg" width="300">
