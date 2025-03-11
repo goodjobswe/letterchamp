@@ -30,3 +30,6 @@ The game loads user settings to generate a list of letters (including additional
   - A game-themed background with a dark overlay sets the stage.
   - The current letter is displayed prominently, while the drawing area shows both the user's strokes and, when requested, the guided stroke animation.
   - The interface adapts text and labels based on the selected language (English or Swedish).
+
+## Screenshots:
+![Alt Text](https://github.com/goodjobswe/letterchamp/blob/main/assets/screenshots/Screenshot_20250311_180811.jpg)
