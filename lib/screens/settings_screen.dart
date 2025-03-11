@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/settings_service.dart';
-import '../services/audio_manager.dart';
-import '../services/sound_effects_manager.dart';
+import 'package:letterchamp/services/settings_service.dart';
+import 'package:letterchamp/services/audio_manager.dart';
+import 'package:letterchamp/services/sound_effects_manager.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});

@@ -3,10 +3,10 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/stroke_checkpoint.dart';
-import '../services/settings_service.dart';
+import 'package:letterchamp/models/stroke_checkpoint.dart';
+import 'package:letterchamp/services/settings_service.dart';
 import 'package:letterchamp/data/letter_stroke_paths.dart';
-import '../services/sound_effects_manager.dart';
+import 'package:letterchamp/services/sound_effects_manager.dart';
 
 class GameplayScreen extends StatefulWidget {
   const GameplayScreen({super.key});
@@ -142,7 +142,7 @@ class GameplayScreenState extends State<GameplayScreen>
     });
   }
 
-  /// Advances the game to the next letter.
+  // Advances the game to the next letter.
   void _nextLetter() {
     if (_currentLetterIndex < _letters.length - 1) {
       _currentLetterIndex++;
@@ -160,7 +160,7 @@ class GameplayScreenState extends State<GameplayScreen>
     });
   }
 
-  /// Displays a custom SnackBar with the provided message.
+  // Displays a custom SnackBar with the provided message.
   void _showSnackBar(String message) {
     _scaffoldMessenger.hideCurrentSnackBar();
     _scaffoldMessenger.showSnackBar(
@@ -183,7 +183,7 @@ class GameplayScreenState extends State<GameplayScreen>
     );
   }
 
-  /// Triggers the help animation and hides the help overlay after [delay].
+  // Triggers the help animation and hides the help overlay after [delay].
   void _triggerHelpAnimation(Duration delay) {
     setState(() {
       _showHelp = true;
@@ -198,7 +198,7 @@ class GameplayScreenState extends State<GameplayScreen>
     });
   }
 
-  /// Called when help is requested.
+  // Called when help is requested.
   void _requestHelp() {
     _scaffoldMessenger.hideCurrentSnackBar();
 
@@ -228,13 +228,13 @@ class GameplayScreenState extends State<GameplayScreen>
     }
   }
 
-  /// Calculates bonus based on current streak.
+  // Calculates bonus based on current streak.
   int _calculateBonus() {
     double multiplier = 1.0 + min(_streak / 5.0, _maxMultiplier - 1.0);
     return (_baseLetterBonus * multiplier).round();
   }
 
-  /// Processes the user stroke when the pan gesture ends.
+  // Processes the user stroke when the pan gesture ends.
   Future<void> _processUserStroke() async {
     final List<Offset> inBetween =
     getEvenlyDistributedPointsDynamic(_userStroke, 35.0);
@@ -356,7 +356,7 @@ class GameplayScreenState extends State<GameplayScreen>
     });
   }
 
-  /// Handles a valid stroke and awards points if the letter is finished.
+  // Handles a valid stroke and awards points if the letter is finished.
   Future<void> _handleValidStroke(int additionalSegments) async {
     _completedStrokes.add(List.from(_userStroke));
     currentStrokeIndex += (1 + additionalSegments);
@@ -426,7 +426,7 @@ class GameplayScreenState extends State<GameplayScreen>
     }
   }
 
-  /// Handles an invalid stroke by resetting the streak and deducting penalty points.
+  // Handles an invalid stroke by resetting the streak and deducting penalty points.
   void _handleInvalidStroke() {
     if (_soundEffectsEnabled) {
       SoundEffectsManager().playEffect('audio/fail.wav');
@@ -740,6 +740,7 @@ double distanceToSegment(Offset p, Offset a, Offset b) {
   return (p - closest).distance;
 }
 
+// Admin function to add new shapes (letter_stroke_paths)
 List<Offset> getEvenlyDistributedPointsDynamic(
     List<Offset> points, double desiredSpacing,
     {double snapThreshold = 10.0}) {
@@ -801,6 +802,7 @@ List<Offset> getEvenlyDistributedPointsDynamic(
   return result;
 }
 
+// Admin function to even out curves when getting new shapes
 Offset _catmullRom(List<Offset> points, double t) {
   final int n = points.length;
   final int segments = n - 1;
@@ -832,6 +834,7 @@ Offset _catmullRom(List<Offset> points, double t) {
   return Offset(x, y);
 }
 
+// Canvas painters
 class CheckpointPainter extends CustomPainter {
   final String letter;
   final StrokeCheckpoints? strokeCheckpoints;

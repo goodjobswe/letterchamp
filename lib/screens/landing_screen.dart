@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/settings_service.dart';
-import '../services/audio_manager.dart';
-import '../services/sound_effects_manager.dart';
+import 'package:letterchamp/services/settings_service.dart';
+import 'package:letterchamp/services/audio_manager.dart';
+import 'package:letterchamp/services/sound_effects_manager.dart';
 
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
@@ -49,7 +49,7 @@ class LandingScreenState extends State<LandingScreen> {
     );
   }
 
-  /// Combined helper for both primary and secondary game buttons.
+  // Combined helper for both primary and secondary game buttons.
   Widget _buildGameButton(
       BuildContext context, String text, String route,
       {bool primary = true, bool reloadOnReturn = false}) {

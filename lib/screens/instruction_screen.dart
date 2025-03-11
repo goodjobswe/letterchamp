@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/stroke_checkpoint.dart';
-import '../services/settings_service.dart';
-import '../services/sound_effects_manager.dart';
+import 'package:letterchamp/models/stroke_checkpoint.dart';
+import 'package:letterchamp/services/settings_service.dart';
+import 'package:letterchamp/services/sound_effects_manager.dart';
 
 class InstructionScreen extends StatefulWidget {
   const InstructionScreen({super.key});
@@ -161,7 +161,7 @@ class InstructionScreenState extends State<InstructionScreen>
     });
   }
 
-  /// Advances the tutorial to the next letter.
+  // Advances the tutorial to the next letter.
   void _nextLetter() {
     if (_currentLetterIndex < _letters.length - 1) {
       _currentLetterIndex++;
@@ -178,7 +178,7 @@ class InstructionScreenState extends State<InstructionScreen>
     });
   }
 
-  /// Sets the help overlay visible and starts the animation.
+  // Sets the help overlay visible and starts the animation.
   void _requestHelp() {
     setState(() {
       _showHelp = true;
