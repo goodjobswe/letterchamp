@@ -160,6 +160,31 @@ ThemeData retroThemeData() {
   );
 }
 
+/// A boxed message in the retro style, with room reserved for its shadow.
+class RetroMessage extends StatelessWidget {
+  const RetroMessage(this.message, {super.key, this.fontSize = 14});
+
+  final String message;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      // Leave room on the right and bottom for the hard shadow.
+      padding: const EdgeInsets.only(
+        right: RetroBox.shadow,
+        bottom: RetroBox.shadow,
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: RetroBox.panel(),
+        child: Text(message, style: RetroText.style(fontSize)),
+      ),
+    );
+  }
+}
+
 /// A floating message box in the retro style.
 SnackBar retroSnackBar(String message) {
   return SnackBar(
@@ -167,16 +192,8 @@ SnackBar retroSnackBar(String message) {
     elevation: 0,
     behavior: SnackBarBehavior.floating,
     margin: const EdgeInsets.all(16),
-    // Leave room on the right and bottom for the hard shadow.
-    padding: const EdgeInsets.only(
-      right: RetroBox.shadow,
-      bottom: RetroBox.shadow,
-    ),
-    content: Container(
-      padding: const EdgeInsets.all(16),
-      decoration: RetroBox.panel(),
-      child: Text(message, style: RetroText.style(14)),
-    ),
+    padding: EdgeInsets.zero,
+    content: RetroMessage(message),
   );
 }
 

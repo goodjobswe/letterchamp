@@ -72,7 +72,6 @@ class InstructionScreenState extends State<InstructionScreen>
   String? letter; // Current letter used in tutorial.
   String _language = "en"; // Default language.
   int _helpStepIndex = 0;
-  MainAxisAlignment columnAlignment = MainAxisAlignment.start;
   bool _soundEffectsEnabled = false;
 
   // Tracing variables.
@@ -218,212 +217,236 @@ class InstructionScreenState extends State<InstructionScreen>
     final String appBarTitle =
         _language == "sv" ? "Så spelar du" : "How to Play";
     final String mainMenuText = _language == "sv" ? "Huvudmeny" : "Main Menu";
+    final String message =
+        helpMessages[_helpStepIndex][_language == "sv" ? "sv" : "en"]!;
 
     return Scaffold(
       body: RetroBackground(
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Column(
-              children: [
-                // Custom transparent AppBar with a back button.
-                AppBar(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  leading: RetroIconButton(
-                    glyph: PixelGlyph.arrowLeft,
-                    onPressed: () {
-                      if (_soundEffectsEnabled) {
-                        SoundEffectsManager().playEffect(
-                          'audio/button_click.wav',
-                        );
-                      }
-                      Navigator.pop(context);
-                    },
-                    tooltip: _language == "sv" ? "Huvudmeny" : "Main Menu",
-                  ),
-                  centerTitle: true,
-                  title: Text(appBarTitle, style: _instructionTextStyle(16)),
-                  actions: [
-                    RetroIconButton(
-                      glyph: PixelGlyph.question,
-                      tooltip: _language == "sv" ? "Hjälp" : "Hint",
-                      onPressed: () {
-                        if (_soundEffectsEnabled) {
-                          SoundEffectsManager().playEffect(
-                            'audio/button_click.wav',
-                          );
-                        }
-                        if (_helpStepIndex == 4) {
-                          setState(() {
-                            _helpStepIndex++;
-                          });
-                        }
-                      },
-                    ),
-                  ],
-                ),
-                // Drawing area.
-                if (_helpStepIndex < 4)
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        const double designWidth = 300;
-                        const double designHeight = 300;
-                        final double scale = min(
-                          constraints.maxWidth / designWidth,
-                          constraints.maxHeight / designHeight,
-                        );
-                        final double dx =
-                            (constraints.maxWidth - designWidth * scale) / 2;
-                        final double dy =
-                            (constraints.maxHeight - designHeight * scale) / 2;
-                        return GestureDetector(
-                          onPanStart: (details) {
-                            // Ignore input while a finished letter is shown.
-                            if (_letterComplete) return;
-                            final Offset designPos =
-                                (details.localPosition - Offset(dx, dy)) /
-                                scale;
-                            setState(() {
-                              _userStroke = [designPos];
-                            });
-                          },
-                          onPanUpdate: (details) {
-                            if (_letterComplete) return;
-                            final Offset designPos =
-                                (details.localPosition - Offset(dx, dy)) /
-                                scale;
-                            setState(() {
-                              _userStroke.add(designPos);
-                            });
-                          },
-                          onPanEnd: (details) async {
-                            if (_letterComplete) return;
-                            final expectedStroke =
-                                strokeCheckpointsList[currentStrokeIndex];
-                            bool valid = false;
-                            if (_userStroke.isEmpty) {
-                              setState(() {
-                                _userStroke = [];
-                              });
-                              return;
-                            }
-                            valid = _isStrokeValid(
-                              _userStroke,
-                              expectedStroke,
-                              20.0,
-                              20.0,
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  children: [
+                    // Custom transparent AppBar with a back button.
+                    AppBar(
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      leading: RetroIconButton(
+                        glyph: PixelGlyph.arrowLeft,
+                        onPressed: () {
+                          if (_soundEffectsEnabled) {
+                            SoundEffectsManager().playEffect(
+                              'audio/button_click.wav',
                             );
-                            if (valid) {
-                              if (_soundEffectsEnabled) {
-                                SoundEffectsManager().playEffect(
-                                  'audio/success.wav',
-                                );
-                              }
-                              setState(() {
-                                _helpStepIndex++;
-                                if (_helpStepIndex == 4) {
-                                  _showHelp = false;
-                                  columnAlignment = MainAxisAlignment.center;
-                                }
-                              });
-                            } else {
-                              if (_soundEffectsEnabled) {
-                                SoundEffectsManager().playEffect(
-                                  'audio/fail.wav',
-                                );
-                              }
-                            }
-                            if (currentStrokeIndex <
-                                    strokeCheckpointsList.length &&
-                                valid) {
-                              _completedStrokes.add(List.from(_userStroke));
-                              currentStrokeIndex++;
-                              if (currentStrokeIndex ==
-                                  strokeCheckpointsList.length) {
-                                if (_soundEffectsEnabled) {
-                                  SoundEffectsManager().playEffect(
-                                    'audio/complete.wav',
-                                  );
-                                }
-                                // Clear the blue stroke immediately so the green one is visible.
-                                setState(() {
-                                  _userStroke = [];
-                                });
-                                await Future.delayed(
-                                  const Duration(seconds: 1),
-                                ); // Delay to show green stroke.
-                                if (!mounted) return;
-                                _nextLetter();
-                                return;
-                              }
-                            }
-                            setState(() {
-                              _userStroke = [];
-                            });
-                          },
-                          child: AnimatedBuilder(
-                            animation: _helpAnimationController,
-                            builder: (context, child) {
-                              return CustomPaint(
-                                size: Size(
-                                  constraints.maxWidth,
-                                  constraints.maxHeight,
-                                ),
-                                painter: CheckpointPainter(
-                                  letter: letter!,
-                                  strokeCheckpoints:
-                                      currentStrokeIndex <
-                                              strokeCheckpointsList.length
-                                          ? strokeCheckpointsList[currentStrokeIndex]
-                                          : null,
-                                  userStroke: _userStroke,
-                                  completedStrokes: _completedStrokes,
-                                  scale: scale,
-                                  dx: dx,
-                                  dy: dy,
-                                  showHelp: _showHelp,
-                                  helpProgress: _helpAnimationController.value,
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                const SizedBox(height: 20),
-                // Instructional text and main menu button.
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: columnAlignment,
-                    children: [
-                      Text(
-                        _language == "sv"
-                            ? helpMessages[_helpStepIndex]["sv"]!
-                            : helpMessages[_helpStepIndex]["en"]!,
-                        textAlign: TextAlign.center,
-                        style: _instructionTextStyle(18),
+                          }
+                          Navigator.pop(context);
+                        },
+                        tooltip: _language == "sv" ? "Huvudmeny" : "Main Menu",
                       ),
-                      if (_helpStepIndex == 5) const SizedBox(height: 36),
-                      if (_helpStepIndex == 5)
-                        Center(
-                          child: _buildMainMenuButton(mainMenuText, () {
+                      centerTitle: true,
+                      title: Text(
+                        appBarTitle,
+                        style: _instructionTextStyle(16),
+                      ),
+                      actions: [
+                        RetroIconButton(
+                          glyph: PixelGlyph.question,
+                          tooltip: _language == "sv" ? "Hjälp" : "Hint",
+                          onPressed: () {
                             if (_soundEffectsEnabled) {
                               SoundEffectsManager().playEffect(
                                 'audio/button_click.wav',
                               );
                             }
-                            Navigator.pop(context);
-                          }),
+                            if (_helpStepIndex == 4) {
+                              setState(() {
+                                _helpStepIndex++;
+                              });
+                            }
+                          },
                         ),
-                    ],
+                      ],
+                    ),
+                    // While letters are traced, the drawing area takes the whole
+                    // height and the instruction sits at the bottom, where the
+                    // game shows its messages.
+                    if (_helpStepIndex < 4) ...[
+                      Expanded(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            const double designWidth = 300;
+                            const double designHeight = 300;
+                            final double scale = min(
+                              constraints.maxWidth / designWidth,
+                              constraints.maxHeight / designHeight,
+                            );
+                            final double dx =
+                                (constraints.maxWidth - designWidth * scale) /
+                                2;
+                            final double dy =
+                                (constraints.maxHeight - designHeight * scale) /
+                                2;
+                            return GestureDetector(
+                              onPanStart: (details) {
+                                // Ignore input while a finished letter is shown.
+                                if (_letterComplete) return;
+                                final Offset designPos =
+                                    (details.localPosition - Offset(dx, dy)) /
+                                    scale;
+                                setState(() {
+                                  _userStroke = [designPos];
+                                });
+                              },
+                              onPanUpdate: (details) {
+                                if (_letterComplete) return;
+                                final Offset designPos =
+                                    (details.localPosition - Offset(dx, dy)) /
+                                    scale;
+                                setState(() {
+                                  _userStroke.add(designPos);
+                                });
+                              },
+                              onPanEnd: (details) async {
+                                if (_letterComplete) return;
+                                final expectedStroke =
+                                    strokeCheckpointsList[currentStrokeIndex];
+                                bool valid = false;
+                                if (_userStroke.isEmpty) {
+                                  setState(() {
+                                    _userStroke = [];
+                                  });
+                                  return;
+                                }
+                                valid = _isStrokeValid(
+                                  _userStroke,
+                                  expectedStroke,
+                                  20.0,
+                                  20.0,
+                                );
+                                if (valid) {
+                                  if (_soundEffectsEnabled) {
+                                    SoundEffectsManager().playEffect(
+                                      'audio/success.wav',
+                                    );
+                                  }
+                                  setState(() {
+                                    _helpStepIndex++;
+                                    if (_helpStepIndex == 4) {
+                                      _showHelp = false;
+                                    }
+                                  });
+                                } else {
+                                  if (_soundEffectsEnabled) {
+                                    SoundEffectsManager().playEffect(
+                                      'audio/fail.wav',
+                                    );
+                                  }
+                                }
+                                if (currentStrokeIndex <
+                                        strokeCheckpointsList.length &&
+                                    valid) {
+                                  _completedStrokes.add(List.from(_userStroke));
+                                  currentStrokeIndex++;
+                                  if (currentStrokeIndex ==
+                                      strokeCheckpointsList.length) {
+                                    if (_soundEffectsEnabled) {
+                                      SoundEffectsManager().playEffect(
+                                        'audio/complete.wav',
+                                      );
+                                    }
+                                    // Clear the blue stroke immediately so the green one is visible.
+                                    setState(() {
+                                      _userStroke = [];
+                                    });
+                                    await Future.delayed(
+                                      const Duration(seconds: 1),
+                                    ); // Delay to show green stroke.
+                                    if (!mounted) return;
+                                    _nextLetter();
+                                    return;
+                                  }
+                                }
+                                setState(() {
+                                  _userStroke = [];
+                                });
+                              },
+                              child: AnimatedBuilder(
+                                animation: _helpAnimationController,
+                                builder: (context, child) {
+                                  return CustomPaint(
+                                    size: Size(
+                                      constraints.maxWidth,
+                                      constraints.maxHeight,
+                                    ),
+                                    painter: CheckpointPainter(
+                                      letter: letter!,
+                                      strokeCheckpoints:
+                                          currentStrokeIndex <
+                                                  strokeCheckpointsList.length
+                                              ? strokeCheckpointsList[currentStrokeIndex]
+                                              : null,
+                                      userStroke: _userStroke,
+                                      completedStrokes: _completedStrokes,
+                                      scale: scale,
+                                      dx: dx,
+                                      dy: dy,
+                                      showHelp: _showHelp,
+                                      helpProgress:
+                                          _helpAnimationController.value,
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      // Same bottom reserve as the game, under the floating
+                      // message, so the letter sits where it does in the game.
+                      const SizedBox(height: 100),
+                    ] else
+                      // The text-only steps center the message, with the menu
+                      // button under the last one.
+                      Expanded(
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              RetroMessage(message, fontSize: 16),
+                              if (_helpStepIndex == 5) ...[
+                                const SizedBox(height: 24),
+                                _buildMainMenuButton(mainMenuText, () {
+                                  if (_soundEffectsEnabled) {
+                                    SoundEffectsManager().playEffect(
+                                      'audio/button_click.wav',
+                                    );
+                                  }
+                                  Navigator.pop(context);
+                                }),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+              // The instruction floats at the bottom like the game's
+              // messages, so the drawing area keeps its size on every step.
+              if (_helpStepIndex < 4)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: RetroMessage(message, fontSize: 16),
                   ),
                 ),
-                const SizedBox(height: 40),
-              ],
-            ),
+            ],
           ),
         ),
       ),
