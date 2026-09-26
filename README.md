@@ -107,4 +107,6 @@ See the [development guide](docs/DEVELOPMENT.md) for the emulator, code style, a
 
 Issues and pull requests are welcome. For a bug report, include the device and OS, Flutter version, steps to reproduce, and the expected and actual behavior. Screenshots are helpful for layout or tracing issues. For a pull request, run the checks above first and keep the app text in both English and Swedish.
 
-Bundled font sources and their notices are listed in [assets/fonts](assets/fonts/README.md).
+## License
+
+Letter Champ is released under the [MIT License](LICENSE). The bundled fonts keep their own Open Font License notices, listed in [assets/fonts](assets/fonts/README.md).
