@@ -1,4 +1,4 @@
-# Project review — September 2026
+# Project review - September 2026
 
 ## What the app does
 
@@ -79,7 +79,7 @@ The original audio plugin left two native music tracks active after a hot restar
 
 A later terminal attachment stalled during hot restart while the emulator and Dart VM remained responsive. Stopping the affected Flutter attach session and reopening the installed app restored playback with one active track. The cause of that debug-session stall has not been established.
 
-## Update — September 26, 2026
+## Update - September 26, 2026
 
 Work done after the recovery, verified with `flutter analyze`, the six tests, a debug APK and screenshots of every screen on the API 35 emulator:
 
