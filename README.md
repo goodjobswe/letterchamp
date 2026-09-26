@@ -10,9 +10,9 @@ The game plays offline. Settings, high scores, and your longest streak are saved
 
 <table>
   <tr>
-    <td align="center"><img src="assets/screenshots/Screenshot_20250312_080245.jpg" alt="Letter Champ main menu with a pixel-art character and sunset background" width="240"></td>
-    <td align="center"><img src="assets/screenshots/Screenshot_20250312_080318.jpg" alt="Tutorial showing the direction of the first stroke of the letter A" width="240"></td>
-    <td align="center"><img src="assets/screenshots/Screenshot_20250312_080441.jpg" alt="Completed letter K with green tracing strokes and a score reward" width="240"></td>
+    <td align="center"><img src="assets/screenshots/home.jpg" alt="Letter Champ main menu with a pixel-art character, sunset background and flat retro buttons" width="240"></td>
+    <td align="center"><img src="assets/screenshots/how-to-play.jpg" alt="Tutorial with the first stroke of the letter A traced in green and a dashed guide with checkpoint squares for the second stroke" width="240"></td>
+    <td align="center"><img src="assets/screenshots/tracing.jpg" alt="Completed letter A with green tracing strokes and a score message" width="240"></td>
   </tr>
   <tr>
     <td align="center">Main menu</td>
@@ -21,7 +21,7 @@ The game plays offline. Settings, high scores, and your longest streak are saved
   </tr>
 </table>
 
-Screenshots are from the March 2025 version. [View all screenshots](assets/screenshots).
+Screenshots are from the September 2026 version on an Android 15 emulator. [View all screenshots](assets/screenshots).
 
 ## Features
 
@@ -31,17 +31,22 @@ Screenshots are from the March 2025 version. [View all screenshots](assets/scree
 - **Stroke guidance:** learn through an animated tutorial and request hints during play.
 - **Scores and streaks:** earn bonuses for consecutive correct letters and track your personal records.
 - **Music and sound effects:** turn each on or off independently.
+- **Retro look:** a pixel font with hard shadows, flat outlined buttons and a 16-color pixel-art palette, all snapped to the device's pixel grid.
 
 ## How to play
 
-1. Open **Settings** to choose a language, letter case, order, and whether to include numbers. The default language is English.
-2. Try **Instructions** for a guided introduction, or choose **Play Now** to start tracing.
+1. Open **Settings** to choose a language, which letters to practice (uppercase, lowercase or both), the order, and whether to include numbers. The default language is English.
+2. Try **How to Play** for a guided introduction, or choose **Play Now** to start tracing.
 3. Draw each letter in the expected stroke order and direction. Correct letters earn points; an incorrect stroke costs 2 points and resets your streak.
 4. Tap the question mark when you need a guide. The first hint in each game is free; later hints cost 5 points when you have enough points.
 
+## Get the app
+
+There is no published build yet, so the only way to play is to build the app from source as described below. A signed Android release on this repository's Releases page is the planned first distribution channel; see the [project review](docs/PROJECT_REVIEW.md) for what that still needs.
+
 ## Run locally
 
-The current tested baseline is **Flutter 3.29.3 / Dart 3.7.2**. Dart is included with Flutter. Newer SDK and dependency versions are still being evaluated.
+The current tested baseline is **Flutter 3.29.3 / Dart 3.7.2**. Dart is included with Flutter. Packages are kept at the newest versions that resolve on this SDK; a newer Flutter and the major package upgrades that depend on it are tracked in the project review.
 
 For Android, install the Flutter SDK, Android SDK tools, and a compatible Java JDK, then start an Android emulator or connect a phone with USB debugging enabled. VS Code with the Flutter extension can handle editing, running, debugging, and hot reload.
 
@@ -65,34 +70,41 @@ See the [development guide](docs/DEVELOPMENT.md) for emulator setup, using the A
 
 ## Project status
 
-Letter Champ is being updated after a development pause. The current baseline passes static analysis and six automated tests, and the Android debug build has been launched and visually checked on an Android 15 / API 35 emulator. Full gameplay testing is still in progress.
+Letter Champ was revived in September 2026 after a development pause. The build was restored, the interface got a retro redesign, every English and Swedish string was reviewed, and the lifecycle and input issues found in the review were fixed. The baseline passes static analysis and the automated tests, and the debug build has been exercised on an Android 15 / API 35 emulator through every screen, including tracing letters in the tutorial and the game.
 
 | Platform | Status |
 | --- | --- |
-| Android | Debug build and startup verified on an emulator. Physical-device and release testing remain. |
+| Android | Debug build verified on an emulator through all screens. Physical-device testing and release signing remain. |
 | iOS | Native project included; build and runtime testing still needed on a Mac with Xcode. |
 | Web and desktop | No app runners included. |
 
-The next work covers dependency updates, gameplay lifecycle and input fixes, broader device testing, and continuous integration. The [project review](docs/PROJECT_REVIEW.md) documents the known issues and technical findings.
+The next work covers a newer Flutter baseline with the major package upgrades, widget tests for gameplay, release signing, and iOS verification. The [project review](docs/PROJECT_REVIEW.md) documents the findings and what is still open.
 
 ## Development
 
-Run the existing checks with:
+Run the checks with:
 
 ```sh
+dart format --output=none --set-exit-if-changed lib/main.dart lib/screens lib/services lib/theme lib/models test
 flutter analyze
 flutter test
 ```
 
-The tests cover settings defaults and persistence, score resets, tracing-data coverage, and loading bundled fonts without network access. They do not yet cover complete gameplay flows.
+The same checks and a debug APK build run in GitHub Actions for every push and pull request. The tests cover settings defaults and persistence, score resets, tracing-data coverage, and loading bundled fonts without network access. They do not yet cover complete gameplay flows.
 
 The main parts of the code are:
 
 - `lib/screens/` — menus, settings, gameplay, and the tutorial.
+- `lib/theme/` — the palette, pixel-font text styles, and the retro widgets every screen is built from.
 - `lib/data/letter_stroke_paths.dart` — ordered tracing checkpoints for each character.
+- `lib/models/` — the checkpoint model and the scoring rules shared by the game and the tutorial.
 - `lib/services/` — saved settings and records, music, and sound effects.
 - `android/` and `ios/` — native app projects.
 
-For a bug report, include the device and OS, Flutter version, steps to reproduce, and the expected and actual behavior. Screenshots are helpful for layout or tracing issues.
+See the [development guide](docs/DEVELOPMENT.md) for the emulator, code style, and CI details.
+
+## Contributing
+
+Issues and pull requests are welcome. For a bug report, include the device and OS, Flutter version, steps to reproduce, and the expected and actual behavior. Screenshots are helpful for layout or tracing issues. For a pull request, run the checks above first and keep the app text in both English and Swedish.
 
 Bundled font sources and their notices are listed in [assets/fonts](assets/fonts/README.md).

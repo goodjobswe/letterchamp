@@ -4,7 +4,7 @@ Letterchamp currently has Android and iOS app targets. The repository does not c
 
 ## Baseline
 
-The September 2026 recovery uses Flutter 3.29.3 with its bundled Dart 3.7.2 and the committed `pubspec.lock`. This establishes a reproducible baseline, not a claim that these are the latest versions. Upgrade Flutter, packages, and native tooling in a separate tested change.
+The September 2026 recovery uses Flutter 3.29.3 with its bundled Dart 3.7.2 and the committed `pubspec.lock`. This establishes a reproducible baseline, not a claim that these are the latest versions. Packages were last upgraded on September 26, 2026 to the newest versions that resolve on this SDK, for example google_fonts 6.3.2. Major upgrades wait for a newer Flutter and should be done together with it in a separate tested change.
 
 ## VS Code on Windows
 
@@ -27,6 +27,10 @@ flutter run -d <android-device-id>
 ```
 
 Alternatively, use **Flutter: Launch Emulator** from VS Code's command palette, select the Android device in the status bar, and press **F5** using the checked-in Letterchamp launch configuration. Hot reload is available during a debug session. A physical Android phone with USB debugging is another option.
+
+If the emulator hangs on launch but starts fine from the **Cold Boot** entry in its menu, the quick-boot snapshot is the culprit: closing a hung emulator with save-on-exit enabled stores that hung state, and every quick boot restores it. Delete `snapshots/default_boot` inside the AVD directory, turn save-on-exit off in the emulator's snapshot settings, and give the AVD at least 4 GB of RAM for a Google Play image.
+
+`adb` lives in `%LOCALAPPDATA%\Android\Sdk\platform-tools`. Add that directory to `PATH` or call it by its full path, for example `adb exec-out screencap -p > shot.png` to capture a screenshot.
 
 ## Android Studio is optional
 
@@ -79,7 +83,21 @@ Launcher icon generation is separate:
 dart run flutter_launcher_icons
 ```
 
+Both generators are dev dependencies; they are not compiled into the app.
+
 The Android release configuration currently uses debug signing. A debug build is suitable for local testing; store distribution requires a separately configured release signing setup. Keep signing secrets outside Git.
+
+## Code style and CI
+
+Format the app code with `dart format` before committing. The tracing data in `lib/data/letter_stroke_paths.dart` is deliberately left unformatted so that each checkpoint list stays on one line:
+
+```powershell
+dart format lib/main.dart lib/screens lib/services lib/theme lib/models test
+flutter analyze
+flutter test
+```
+
+The GitHub Actions workflow in `.github/workflows/ci.yml` runs the same format check, analysis and tests, then builds a debug APK, on Flutter 3.29.3 for every push to `main` and every pull request. Bump the pinned Flutter version there together with the README baseline.
 
 ## iOS
 

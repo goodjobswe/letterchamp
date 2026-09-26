@@ -72,3 +72,18 @@ Many latest versions cannot resolve on the old SDK. A bulk package upgrade befor
 The original audio plugin left two native music tracks active after a hot restart. Updated the audio packages to include upstream cleanup, with ExoPlayer pinned to 0.1.2 to preserve Android API 21 support. The updated Android debug APK was built and installed on the existing emulator. Two consecutive Flutter hot restarts each left exactly one active Letterchamp audio track, with no Flutter or Android runtime errors in the checked log. Analysis and all six existing tests passed. Music volume remains at the owner's requested 100% test setting.
 
 A later terminal attachment stalled during hot restart while the emulator and Dart VM remained responsive. Stopping the affected Flutter attach session and reopening the installed app restored playback with one active track. The cause of that debug-session stall has not been established.
+
+## Update — September 26, 2026
+
+Work done after the recovery, verified with `flutter analyze`, the six tests, a debug APK and screenshots of every screen on the API 35 emulator:
+
+- **Retro UI pass.** The new `lib/theme/` directory holds the palette (Sweetie 16, which matches the background art), pixel-font text styles with hard one-pixel shadows snapped to whole device pixels, and the retro widgets: flat outlined buttons, pixel icon buttons, toggles, menu-style option lists, a stepped loader and the shared background. Every screen uses them; the stock Material buttons, switches, dropdowns, icons and progress spinner are gone.
+- **Text review.** Every English and Swedish string was reviewed and reworded where needed. The two Swedish errors were "Ljud Effekter" (one word) and "Första hjälpen" (which means first aid). Hint cost and stroke penalty now come from `lib/models/game_rules.dart`, so the tutorial text cannot drift from the game.
+- **Layout.** The home screen no longer scrolls by the safe-area height; the character floats between the greeting and the buttons, which sit near the bottom. Settings and High Scores now account for the bottom system inset.
+- **Lifecycle and input (item 4).** Async loaders and the completion delay check `mounted` before touching state, and the pan handlers ignore input while a finished letter is shown, which previously could index past the stroke list.
+- **Dependencies (item 6, partly).** Packages were upgraded to the newest versions that resolve on Flutter 3.29.3, and the icon and splash generators moved to dev dependencies. Major upgrades (google_fonts 8, flutter_lints 6, audioplayers 6.8) need a newer Flutter and remain open, as does the ExoPlayer pin for API 21.
+- **CI (item 7, partly).** `.github/workflows/ci.yml` runs the format check, analysis, tests and a debug APK build. Gameplay widget tests are still missing.
+- **Emulator.** The quick-boot hang on the development machine was a snapshot saved from a hung instance; the development guide describes the fix.
+- **Assets.** The unused `game_bg2.png` was removed and the screenshots were retaken from the current build.
+
+Still open before or shortly after going public: choose and add a code license (item 1), run a dedicated secret scanner over the history (item 2), the descender and landscape checks (item 5), a newer Flutter baseline with the major package upgrades (item 6), gameplay tests (item 7), release signing, and iOS verification.
