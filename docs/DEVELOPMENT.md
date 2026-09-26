@@ -51,6 +51,12 @@ During recovery, Flutter was pointed at an existing standalone Corretto JDK 21.0
 
 Android's `sdkmanager` and `avdmanager` command-line tools can manage packages and virtual devices without Android Studio. If invoking them directly, configure `JAVA_HOME` to the standalone JDK; Flutter's JDK setting only configures Flutter.
 
+## Audio and hot restart
+
+The audio dependencies require versions that dispose native players on hot restart: `audioplayers` 6.4.0 or newer and `audioplayers_android_exo` 0.1.2. The lockfile currently resolves versions 6.6.0 and 0.1.2. ExoPlayer is pinned to 0.1.2 to preserve Android API 21 support; 0.1.3 raises the minimum to API 23. Older versions can leave music playing while a new Dart session starts another player.
+
+After changing native plugins, stop the current `flutter run` session and run it again to rebuild and reinstall the app. A hot restart alone cannot replace native plugin code. In an active terminal session, uppercase `R` performs a hot restart; lowercase `r` only hot reloads. Background music volume is initialized when the audio manager is created, so changing it needs a hot restart.
+
 ## Offline fonts
 
 The required regular fonts are bundled in `assets/fonts/`; runtime font downloads are disabled. Their source URLs, checksums, and supplied notices are included in that directory. Keep font metrics aligned with the tracing data when changing typography.

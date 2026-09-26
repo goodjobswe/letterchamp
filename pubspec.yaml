@@ -38,8 +38,10 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_launcher_icons: ^0.14.3
   flutter_native_splash: ^2.4.5
-  audioplayers: ^6.3.0
-  audioplayers_android_exo: any
+  # These minimum versions include native player cleanup on hot restart.
+  audioplayers: ^6.4.0
+  # Keep Android API 21 support; ExoPlayer 0.1.3 requires API 23.
+  audioplayers_android_exo: 0.1.2
 
 flutter_launcher_icons: # Run with "dart run flutter_launcher_icons"
   android: true

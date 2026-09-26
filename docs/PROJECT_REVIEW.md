@@ -36,13 +36,13 @@ The five screens are the landing menu, gameplay, animated instructions, settings
 3. **Offline fonts (repaired for the baseline):** the first emulator launch logged a font-download DNS failure. The exact Press Start 2P and Poppins regular binaries referenced by the locked package are now bundled, SHA-256 verified, and accompanied by their supplied notices. Runtime fetching is disabled and an offline font-loading widget test was added. Still verify a fresh offline release install and tracing alignment when upgrading fonts.
 4. **Gameplay lifecycle and input:** asynchronous screen loading and score handling can call `setState` after disposal. After the last stroke, input stays enabled during the one-second completion delay even though `currentStrokeIndex` has advanced beyond the current letter's strokes. Add regression tests for leaving during async work and drawing again during completion before repairing these paths.
 5. **Canvas and dots:** lowercase descenders such as g/j/p/q/y extend below the nominal 300-unit drawing height. Check compact and landscape layouts for clipping and unreachable checkpoints. Dot strokes are handled by validation, but gesture capture uses pan callbacks; verify simple taps and Swedish accents on devices.
-6. **Dependencies/toolchain:** modernize Flutter and Dart together, then update packages and native Android/iOS configuration with tests between stages. `audioplayers_android_exo: any` needs an explicit supported constraint or a documented decision to remove it. Icon generation belongs in dev tooling; review native splash usage before relocating it. Current Android versions are AGP 8.7.0, Kotlin 1.8.22, Gradle 8.10.2, and NDK 27.0.12077973. iOS declares a 12.0 deployment target and has not been built in this Windows review.
+6. **Dependencies/toolchain:** modernize Flutter and Dart together, then update packages and native Android/iOS configuration with tests between stages. The follow-up audio fix replaces the unconstrained ExoPlayer dependency with version 0.1.2 supporting hot-restart cleanup and the existing Android minimum; the remaining packages still need review. Icon generation belongs in dev tooling; review native splash usage before relocating it. Current Android versions are AGP 8.7.0, Kotlin 1.8.22, Gradle 8.10.2, and NDK 27.0.12077973. iOS declares a 12.0 deployment target and has not been built in this Windows review.
 7. **Tests and CI:** add widget/integration coverage for navigation, both languages, settings, tracing acceptance/rejection, score/hint behavior, audio lifecycle, and narrow screens. Add CI after choosing the supported Flutter baseline. Verify Android release and iOS separately.
 8. **Public presentation:** maintain the linked setup instructions and relative screenshot links, add contribution guidance and any applicable asset credits, and distinguish tested platforms from planned support. `publish_to: none` should remain: making the Git repository public does not require publishing the app as a pub.dev package.
 
 ## Dependency snapshot
 
-`flutter pub outdated` on the installed baseline reported these direct package versions. These are an observation from this review, not a permanent upgrade prescription.
+`flutter pub outdated` on the installed baseline reported these direct package versions. These are the initial baseline observations, not a permanent upgrade prescription. The subsequent hot-restart audio fix updates audioplayers to 6.6.0 and audioplayers_android_exo to 0.1.2 in the lockfile.
 
 | Package | Locked | Latest reported |
 | --- | --- | --- |
@@ -66,3 +66,9 @@ Many latest versions cannot resolve on the old SDK. A bulk package upgrade befor
 - The final debug APK installed and launched successfully on the API 35 emulator. The landing screen was visually checked with the intended bundled font, and the new app process had no Flutter/Android startup errors in the checked log. Restarting the local ADB server resolved its initial authorization issue.
 - The background emulator was stopped after verification; its saved Letterchamp_API_35 profile remains available for VS Code.
 - iOS, Android release mode, physical devices, and full gameplay flows remain unverified.
+
+## Audio restart follow-up
+
+The original audio plugin left two native music tracks active after a hot restart. Updated the audio packages to include upstream cleanup, with ExoPlayer pinned to 0.1.2 to preserve Android API 21 support. The updated Android debug APK was built and installed on the existing emulator. Two consecutive Flutter hot restarts each left exactly one active Letterchamp audio track, with no Flutter or Android runtime errors in the checked log. Analysis and all six existing tests passed. Music volume remains at the owner's requested 100% test setting.
+
+A later terminal attachment stalled during hot restart while the emulator and Dart VM remained responsive. Stopping the affected Flutter attach session and reopening the installed app restored playback with one active track. The cause of that debug-session stall has not been established.

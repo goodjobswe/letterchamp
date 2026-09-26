@@ -11,8 +11,8 @@ class AudioManager with WidgetsBindingObserver {
   AudioManager._internal() {
     WidgetsBinding.instance.addObserver(this); // Listen for app lifecycle events
 
-    // Lower the volume to 15%
-    _player.setVolume(0.15);
+    // Set background music volume to 100%
+    _player.setVolume(1.0);
     // Set the release mode to loop.
     _player.setReleaseMode(ReleaseMode.loop);
     // Set as media player
