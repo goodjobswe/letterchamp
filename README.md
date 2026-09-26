@@ -96,7 +96,7 @@ flutter analyze
 flutter test
 ```
 
-The same checks and a debug APK build run in GitHub Actions for every push and pull request. The tests cover settings defaults and persistence, score resets, tracing-data coverage, and loading bundled fonts without network access. They do not yet cover complete gameplay flows.
+The same checks and a debug APK build run in GitHub Actions for every push and pull request. The tests cover settings defaults and persistence, score resets, tracing-data coverage, stroke validation and the streak bonus, the mascot's animation timing, and loading bundled fonts without network access. They do not yet cover complete gameplay flows.
 
 The main parts of the code are:
 

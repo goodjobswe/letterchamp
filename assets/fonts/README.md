@@ -1,6 +1,6 @@
 # Bundled fonts
 
-These are the exact regular font binaries referenced by google_fonts 6.2.1, retained to preserve the letter metrics used by the tracing checkpoints.
+These are the exact regular font binaries referenced by google_fonts 6.2.1, retained to preserve the letter metrics used by the tracing checkpoints. They remain in use after the package was upgraded to 6.3.2, since runtime fetching is off and the bundled files are what the app renders.
 
 - Press Start 2P: https://fonts.gstatic.com/s/a/8e9e854f71aebd3bb8342321d0cc92cabf68e27354dd7a90e806bce895da8dca.ttf
 - Poppins: https://fonts.gstatic.com/s/a/705290b12f58c6d70aafcaaf461dbc3d2f7f19d0f4362af1843b107d95d4960a.ttf

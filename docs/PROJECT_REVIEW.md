@@ -81,7 +81,7 @@ A later terminal attachment stalled during hot restart while the emulator and Da
 
 ## Update - September 26, 2026
 
-Work done after the recovery, verified with `flutter analyze`, the six tests, a debug APK and screenshots of every screen on the API 35 emulator:
+Work done after the recovery, verified with `flutter analyze`, the test suite, debug and release APKs, and screenshots of every screen on the API 35 emulator:
 
 - **Retro UI pass.** The new `lib/theme/` directory holds the palette (Sweetie 16, which matches the background art), pixel-font text styles with hard one-pixel shadows snapped to whole device pixels, and the retro widgets: flat outlined buttons, pixel icon buttons, toggles, menu-style option lists, a stepped loader and the shared background. Every screen uses them; the stock Material buttons, switches, dropdowns, icons and progress spinner are gone.
 - **Text review.** Every English and Swedish string was reviewed and reworded where needed. The two Swedish errors were "Ljud Effekter" (one word) and "Första hjälpen" (which means first aid). Hint cost and stroke penalty now come from `lib/models/game_rules.dart`, so the tutorial text cannot drift from the game.
