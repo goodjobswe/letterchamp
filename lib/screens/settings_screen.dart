@@ -1,28 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:letterchamp/services/music_manager.dart';
 import 'package:letterchamp/services/settings_service.dart';
-import 'package:letterchamp/services/audio_manager.dart';
 import 'package:letterchamp/services/sound_effects_manager.dart';
 import 'package:letterchamp/theme/retro_theme.dart';
 import 'package:letterchamp/theme/retro_widgets.dart';
 
+/// Language, which letters to practice, their order, sound and numbers.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  SettingsScreenState createState() => SettingsScreenState();
+  State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen> {
   final SettingsService _settingsService = SettingsService();
 
-  // Default values in case the settings haven't been stored yet.
-  String _selectedLanguage = 'en';
-  String _selectedGameMode = 'random';
-  String _selectedLetterOrder = 'alphabetic';
+  bool _loading = true;
+  String _language = 'en';
+  String _gameMode = 'random';
+  String _letterOrder = 'alphabetic';
   bool _musicEnabled = true;
   bool _soundEffectsEnabled = true;
-  bool _numbersEnabled = false; // New variable for NumbersEnabled
-  bool _isLoading = true;
+  bool _numbersEnabled = false;
+
+  bool get _swedish => _language == 'sv';
 
   @override
   void initState() {
@@ -31,129 +33,86 @@ class SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final language = await _settingsService.getLanguage();
-    final gameMode = await _settingsService.getGameMode();
-    final letterOrder = await _settingsService.getLetterOrder();
-    final musicEnabled = await _settingsService.getMusicEnabled();
-    final soundEffectsEnabled = await _settingsService.getSoundEffectsEnabled();
-    final numbersEnabled =
-        await _settingsService.getNumbersEnabled(); // Load numbers setting
-
+    final String language = await _settingsService.getLanguage();
+    final String gameMode = await _settingsService.getGameMode();
+    final String letterOrder = await _settingsService.getLetterOrder();
+    final bool musicEnabled = await _settingsService.getMusicEnabled();
+    final bool soundEffectsEnabled =
+        await _settingsService.getSoundEffectsEnabled();
+    final bool numbersEnabled = await _settingsService.getNumbersEnabled();
     if (!mounted) return;
     setState(() {
-      _selectedLanguage = language;
-      _selectedGameMode = gameMode;
-      _selectedLetterOrder = letterOrder;
+      _language = language;
+      _gameMode = gameMode;
+      _letterOrder = letterOrder;
       _musicEnabled = musicEnabled;
       _soundEffectsEnabled = soundEffectsEnabled;
       _numbersEnabled = numbersEnabled;
-      _isLoading = false;
+      _loading = false;
     });
   }
 
-  void _updateLanguage(String? newLanguage) async {
-    if (newLanguage == null) return;
-    await _settingsService.setLanguage(newLanguage);
-    setState(() {
-      _selectedLanguage = newLanguage;
-    });
+  Future<void> _updateLanguage(String? language) async {
+    if (language == null) return;
+    await _settingsService.setLanguage(language);
+    if (!mounted) return;
+    setState(() => _language = language);
   }
 
-  void _updateGameMode(String? newGameMode) async {
-    if (newGameMode == null) return;
-    await _settingsService.setGameMode(newGameMode);
-    setState(() {
-      _selectedGameMode = newGameMode;
-    });
+  Future<void> _updateGameMode(String? gameMode) async {
+    if (gameMode == null) return;
+    await _settingsService.setGameMode(gameMode);
+    if (!mounted) return;
+    setState(() => _gameMode = gameMode);
   }
 
-  void _updateLetterOrder(String? newLetterOrder) async {
-    if (newLetterOrder == null) return;
-    await _settingsService.setLetterOrder(newLetterOrder);
-    setState(() {
-      _selectedLetterOrder = newLetterOrder;
-    });
+  Future<void> _updateLetterOrder(String? letterOrder) async {
+    if (letterOrder == null) return;
+    await _settingsService.setLetterOrder(letterOrder);
+    if (!mounted) return;
+    setState(() => _letterOrder = letterOrder);
   }
 
-  void _updateMusicEnabled(bool value) async {
-    await _settingsService.setMusicEnabled(value);
-    setState(() {
-      _musicEnabled = value;
-    });
-    if (value) {
-      AudioManager().play();
+  Future<void> _updateMusicEnabled(bool enabled) async {
+    await _settingsService.setMusicEnabled(enabled);
+    if (enabled) {
+      MusicManager().play();
     } else {
-      AudioManager().stop();
+      MusicManager().stop();
     }
+    if (!mounted) return;
+    setState(() => _musicEnabled = enabled);
   }
 
-  void _updateSoundEffectsEnabled(bool value) async {
-    await _settingsService.setSoundEffectsEnabled(value);
-    setState(() {
-      _soundEffectsEnabled = value;
-    });
+  Future<void> _updateSoundEffectsEnabled(bool enabled) async {
+    await _settingsService.setSoundEffectsEnabled(enabled);
+    SoundEffectsManager().enabled = enabled;
+    if (!mounted) return;
+    setState(() => _soundEffectsEnabled = enabled);
   }
 
-  // New function to update numbers enabled state.
-  void _updateNumbersEnabled(bool value) async {
-    await _settingsService.setNumbersEnabled(value);
-    setState(() {
-      _numbersEnabled = value;
-    });
+  Future<void> _updateNumbersEnabled(bool enabled) async {
+    await _settingsService.setNumbersEnabled(enabled);
+    if (!mounted) return;
+    setState(() => _numbersEnabled = enabled);
   }
 
-  // Helper for common text style with shadow.
-  TextStyle _appTextStyleShadow(double size) {
-    return RetroText.style(size);
-  }
+  TextStyle get _labelStyle => RetroText.style(18);
 
-  // Helper for a menu-style option list; every choice stays visible.
-  Widget _buildChoice(
-    String currentValue,
-    List<RetroOption<String>> options,
-    ValueChanged<String?> onChanged,
-  ) {
-    return RetroChoice<String>(
-      value: currentValue,
-      options: options,
-      onChanged: onChanged,
+  /// A setting shown as a switch with its label on the left.
+  Widget _toggleRow(String label, bool value, ValueChanged<bool> onChanged) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: _labelStyle),
+        RetroToggle(value: value, onChanged: onChanged),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Translated texts based on the selected language.
-    final String settingsTitle =
-        _selectedLanguage == 'sv' ? 'Inställningar' : 'Settings';
-    final String languageLabel =
-        _selectedLanguage == 'sv' ? 'Språk' : 'Language';
-    final String gameModeLabel =
-        _selectedLanguage == 'sv' ? 'Bokstäver' : 'Letters';
-    final String letterOrderLabel =
-        _selectedLanguage == 'sv' ? 'Bokstavsordning' : 'Letter Order';
-    final String musicText = _selectedLanguage == 'sv' ? 'Musik' : 'Music';
-    final String soundEffectsText =
-        _selectedLanguage == 'sv' ? 'Ljudeffekter' : 'Sound Effects';
-    final String numbersText =
-        _selectedLanguage == 'sv'
-            ? 'Siffror'
-            : 'Numbers'; // New label for Numbers
-    // Language names stay in their own language so anyone can find theirs.
-    const String englishText = 'English';
-    const String swedishText = 'Svenska';
-    final String uppercaseText =
-        _selectedLanguage == 'sv' ? 'Bara stora' : 'Uppercase only';
-    final String lowercaseText =
-        _selectedLanguage == 'sv' ? 'Bara små' : 'Lowercase only';
-    final String randomText =
-        _selectedLanguage == 'sv' ? 'Stora och små' : 'Both';
-    final String alphabeticText =
-        // The pixel font has no room for a full-height Ö, so avoid "A till Ö".
-        _selectedLanguage == 'sv' ? 'Alfabetisk' : 'A to Z';
-    final String randomOrderText =
-        _selectedLanguage == 'sv' ? 'Slumpmässig' : 'Shuffled';
-    final String mainMenuText =
-        _selectedLanguage == 'sv' ? 'Huvudmeny' : 'Main Menu';
+    final String mainMenuText = _swedish ? 'Huvudmeny' : 'Main Menu';
 
     return Scaffold(
       body: RetroBackground(
@@ -162,36 +121,34 @@ class SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
               children: [
-                // Custom transparent AppBar with back button.
                 AppBar(
                   backgroundColor: Colors.transparent,
                   elevation: 0,
                   leading: RetroIconButton(
                     glyph: PixelGlyph.arrowLeft,
+                    tooltip: mainMenuText,
                     onPressed: () {
-                      if (_soundEffectsEnabled) {
-                        SoundEffectsManager().playEffect(
-                          'audio/button_click.wav',
-                        );
-                      }
+                      SoundEffectsManager().play(SoundEffect.click);
                       Navigator.pop(context);
                     },
-                    tooltip: mainMenuText,
                   ),
                   centerTitle: true,
-                  title: Text(settingsTitle, style: _appTextStyleShadow(16)),
+                  title: Text(
+                    _swedish ? 'Inställningar' : 'Settings',
+                    style: RetroText.style(16),
+                  ),
                 ),
-                // Expanded content.
                 Expanded(
                   child:
-                      _isLoading
+                      _loading
                           ? const Center(child: RetroLoader())
                           : SingleChildScrollView(
                             child: ConstrainedBox(
                               constraints: BoxConstraints(
-                                // Everything the status bar, toolbar and system
-                                // navigation leave over, so nothing scrolls unless
-                                // the content is taller than the screen.
+                                // Everything the status bar, toolbar and
+                                // system navigation leave over, so nothing
+                                // scrolls unless the content is taller than
+                                // the screen.
                                 minHeight:
                                     MediaQuery.of(context).size.height -
                                     kToolbarHeight -
@@ -202,101 +159,115 @@ class SettingsScreenState extends State<SettingsScreen> {
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
-                                    // Language Setting.
                                     Text(
-                                      languageLabel,
-                                      style: _appTextStyleShadow(18),
+                                      _swedish ? 'Språk' : 'Language',
+                                      style: _labelStyle,
                                     ),
                                     const SizedBox(height: 8),
-                                    _buildChoice(_selectedLanguage, [
-                                      RetroOption('en', englishText),
-                                      RetroOption('sv', swedishText),
-                                    ], _updateLanguage),
+                                    RetroChoice<String>(
+                                      value: _language,
+                                      // Language names stay in their own
+                                      // language so anyone can find theirs.
+                                      options: const [
+                                        RetroOption('en', 'English'),
+                                        RetroOption('sv', 'Svenska'),
+                                      ],
+                                      onChanged: _updateLanguage,
+                                    ),
                                     const SizedBox(height: 16),
-                                    // Game Mode Setting.
                                     Text(
-                                      gameModeLabel,
-                                      style: _appTextStyleShadow(18),
+                                      _swedish ? 'Bokstäver' : 'Letters',
+                                      style: _labelStyle,
                                     ),
                                     const SizedBox(height: 8),
-                                    _buildChoice(_selectedGameMode, [
-                                      RetroOption('uppercase', uppercaseText),
-                                      RetroOption('lowercase', lowercaseText),
-                                      RetroOption('random', randomText),
-                                    ], _updateGameMode),
+                                    RetroChoice<String>(
+                                      value: _gameMode,
+                                      options: [
+                                        RetroOption(
+                                          'uppercase',
+                                          _swedish
+                                              ? 'Bara stora'
+                                              : 'Uppercase only',
+                                        ),
+                                        RetroOption(
+                                          'lowercase',
+                                          _swedish
+                                              ? 'Bara små'
+                                              : 'Lowercase only',
+                                        ),
+                                        RetroOption(
+                                          'random',
+                                          _swedish ? 'Stora och små' : 'Both',
+                                        ),
+                                      ],
+                                      onChanged: _updateGameMode,
+                                    ),
                                     const SizedBox(height: 16),
-                                    // Letter Order Setting.
                                     Text(
-                                      letterOrderLabel,
-                                      style: _appTextStyleShadow(18),
+                                      _swedish
+                                          ? 'Bokstavsordning'
+                                          : 'Letter Order',
+                                      style: _labelStyle,
                                     ),
                                     const SizedBox(height: 8),
-                                    _buildChoice(_selectedLetterOrder, [
-                                      RetroOption('alphabetic', alphabeticText),
-                                      RetroOption('random', randomOrderText),
-                                    ], _updateLetterOrder),
-                                    const SizedBox(height: 32),
-                                    // Music Toggle.
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          musicText,
-                                          style: _appTextStyleShadow(18),
+                                    RetroChoice<String>(
+                                      value: _letterOrder,
+                                      options: [
+                                        // The pixel font has no room for a
+                                        // full-height Ö, so not "A till Ö".
+                                        RetroOption(
+                                          'alphabetic',
+                                          _swedish ? 'Alfabetisk' : 'A to Z',
                                         ),
-                                        RetroToggle(
-                                          value: _musicEnabled,
-                                          onChanged: _updateMusicEnabled,
+                                        RetroOption(
+                                          'random',
+                                          _swedish ? 'Slumpmässig' : 'Shuffled',
                                         ),
                                       ],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    // Sound Effects Toggle.
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          soundEffectsText,
-                                          style: _appTextStyleShadow(18),
-                                        ),
-                                        RetroToggle(
-                                          value: _soundEffectsEnabled,
-                                          onChanged: _updateSoundEffectsEnabled,
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    // Numbers Toggle.
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          numbersText,
-                                          style: _appTextStyleShadow(18),
-                                        ),
-                                        RetroToggle(
-                                          value: _numbersEnabled,
-                                          onChanged: _updateNumbersEnabled,
-                                        ),
-                                      ],
+                                      onChanged: _updateLetterOrder,
                                     ),
                                     const SizedBox(height: 32),
-                                    // Main Menu Button.
+                                    _toggleRow(
+                                      _swedish ? 'Musik' : 'Music',
+                                      _musicEnabled,
+                                      _updateMusicEnabled,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _toggleRow(
+                                      _swedish
+                                          ? 'Ljudeffekter'
+                                          : 'Sound Effects',
+                                      _soundEffectsEnabled,
+                                      _updateSoundEffectsEnabled,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _toggleRow(
+                                      _swedish ? 'Siffror' : 'Numbers',
+                                      _numbersEnabled,
+                                      _updateNumbersEnabled,
+                                    ),
+                                    const SizedBox(height: 32),
                                     Center(
                                       child: RetroButton(
                                         label: mainMenuText,
                                         onPressed: () {
-                                          if (_soundEffectsEnabled) {
-                                            SoundEffectsManager().playEffect(
-                                              'audio/button_click.wav',
-                                            );
-                                          }
+                                          SoundEffectsManager().play(
+                                            SoundEffect.click,
+                                          );
                                           Navigator.pop(context);
                                         },
                                       ),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    // Wording required by the music's license.
+                                    Text(
+                                      'Credit: https://www.FesliyanStudios.com Background Music',
+                                      style: RetroText.style(
+                                        10,
+                                        color: RetroColors.mist,
+                                        shadow: false,
+                                      ),
+                                      textAlign: TextAlign.center,
                                     ),
                                     const SizedBox(height: 16),
                                   ],

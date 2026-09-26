@@ -1,27 +1,35 @@
 import 'package:audioplayers/audioplayers.dart';
 
-class SoundEffectsManager {
-  static final SoundEffectsManager _instance = SoundEffectsManager._internal();
-  final AudioPlayer _player = AudioPlayer();
+/// The short sounds the game plays.
+enum SoundEffect {
+  click('button_click'),
+  cancel('cancel'),
+  complete('complete'),
+  fail('fail'),
+  start('start'),
+  success('success');
 
+  const SoundEffect(this._file);
+
+  final String _file;
+
+  String get assetPath => 'audio/$_file.wav';
+}
+
+/// Plays one sound effect at a time. The app shares a single instance.
+class SoundEffectsManager {
   factory SoundEffectsManager() => _instance;
 
-  SoundEffectsManager._internal() {
-    // Set player mode
-    _player.setPlayerMode(
-      PlayerMode.mediaPlayer,
-    ); // Use mediaPlayer for general cases
-
-    // Set audio context for sound effects
+  SoundEffectsManager._() {
+    _player.setPlayerMode(PlayerMode.mediaPlayer);
     _player.setAudioContext(
       AudioContext(
         android: AudioContextAndroid(
           isSpeakerphoneOn: false,
-          stayAwake: false, // No need to keep awake for short effects
+          stayAwake: false,
           contentType: AndroidContentType.sonification,
           usageType: AndroidUsageType.game,
-          audioFocus:
-              AndroidAudioFocus.gainTransientMayDuck, // Allows multiple sounds
+          audioFocus: AndroidAudioFocus.gainTransientMayDuck,
         ),
         iOS: AudioContextIOS(
           category: AVAudioSessionCategory.playback,
@@ -31,12 +39,17 @@ class SoundEffectsManager {
     );
   }
 
-  Future<void> playEffect(String sourceString) async {
-    await _player.stop();
-    await _player.play(AssetSource(sourceString));
-  }
+  static final SoundEffectsManager _instance = SoundEffectsManager._();
 
-  Future<void> stopEffect() async {
+  final AudioPlayer _player = AudioPlayer();
+
+  /// Mirrors the sound-effects setting. [play] does nothing while false.
+  bool enabled = true;
+
+  /// Plays [effect], cutting off whichever effect is still playing.
+  Future<void> play(SoundEffect effect) async {
+    if (!enabled) return;
     await _player.stop();
+    await _player.play(AssetSource(effect.assetPath));
   }
 }

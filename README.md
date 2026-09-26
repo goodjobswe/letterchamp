@@ -95,9 +95,10 @@ The same checks and a debug APK build run in GitHub Actions for every push and p
 The main parts of the code are:
 
 - `lib/screens/` — menus, settings, gameplay, and the tutorial.
+- `lib/widgets/tracing_canvas.dart` — the surface letters are traced on, shared by the game and the tutorial.
 - `lib/theme/` — the palette, pixel-font text styles, and the retro widgets every screen is built from.
-- `lib/data/letter_stroke_paths.dart` — ordered tracing checkpoints for each character.
-- `lib/models/` — the checkpoint model and the scoring rules shared by the game and the tutorial.
+- `lib/data/` — ordered tracing checkpoints for each character, and the tool used to author them.
+- `lib/models/` — the checkpoint model, stroke validation, and the scoring rules.
 - `lib/services/` — saved settings and records, music, and sound effects.
 - `android/` and `ios/` — native app projects.
 
@@ -107,6 +108,12 @@ See the [development guide](docs/DEVELOPMENT.md) for the emulator, code style, a
 
 Issues and pull requests are welcome. For a bug report, include the device and OS, Flutter version, steps to reproduce, and the expected and actual behavior. Screenshots are helpful for layout or tracing issues. For a pull request, run the checks above first and keep the app text in both English and Swedish.
 
+## Credits
+
+Credit: https://www.FesliyanStudios.com Background Music. The background music is used under Fesliyan Studios' free license, which requires this credit and does not allow monetized use.
+
+The fonts are Press Start 2P and Poppins under the Open Font License; their notices are listed in [assets/fonts](assets/fonts/README.md).
+
 ## License
 
-Letter Champ is released under the [MIT License](LICENSE). The bundled fonts keep their own Open Font License notices, listed in [assets/fonts](assets/fonts/README.md).
+The source code is released under the [MIT License](LICENSE). The license covers the code only: the character, background artwork, sound effects and music are not included and may not be reused or redistributed outside this project without permission from their respective owners.

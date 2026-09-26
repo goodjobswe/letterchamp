@@ -1,90 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:letterchamp/services/music_manager.dart';
 import 'package:letterchamp/services/settings_service.dart';
-import 'package:letterchamp/services/audio_manager.dart';
 import 'package:letterchamp/services/sound_effects_manager.dart';
 import 'package:letterchamp/theme/retro_theme.dart';
 import 'package:letterchamp/theme/retro_widgets.dart';
 
+/// The main menu.
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
 
   @override
-  LandingScreenState createState() => LandingScreenState();
+  State<LandingScreen> createState() => _LandingScreenState();
 }
 
-class LandingScreenState extends State<LandingScreen> {
-  String _language = "en";
-  bool _isLoading = true;
-  bool _soundEffectsEnabled = false;
-  final SettingsService settingsService = SettingsService();
+class _LandingScreenState extends State<LandingScreen> {
+  final SettingsService _settingsService = SettingsService();
+
+  bool _loading = true;
+  String _language = 'en';
 
   @override
   void initState() {
     super.initState();
-    _loadSettings();
+    _applySettings();
   }
 
-  Future<void> _loadSettings() async {
-    await settingsService.init();
-    final language = await settingsService.getLanguage();
+  /// Reads the saved settings and starts or stops the music to match. Runs
+  /// again whenever another screen returns here, since Settings may have
+  /// changed them.
+  Future<void> _applySettings() async {
+    final String language = await _settingsService.getLanguage();
+    final bool musicEnabled = await _settingsService.getMusicEnabled();
+    SoundEffectsManager().enabled =
+        await _settingsService.getSoundEffectsEnabled();
+    if (musicEnabled) {
+      MusicManager().play();
+    } else {
+      MusicManager().stop();
+    }
     if (!mounted) return;
     setState(() {
       _language = language;
-      _isLoading = false;
+      _loading = false;
     });
-
-    final musicEnabled = await settingsService.getMusicEnabled();
-    if (musicEnabled) {
-      AudioManager().play();
-    } else {
-      AudioManager().stop();
-    }
-
-    final soundEffectsEnabled = await settingsService.getSoundEffectsEnabled();
-    _soundEffectsEnabled = soundEffectsEnabled;
   }
 
-  // Combined helper for both primary and secondary game buttons.
-  // A shared minimum width keeps the menu buttons the same size.
-  Widget _buildGameButton(
-    BuildContext context,
-    String text,
-    String route, {
-    bool primary = true,
-    bool reloadOnReturn = false,
-  }) {
+  /// A menu button that opens [route]. All menu buttons share one minimum
+  /// width so they line up.
+  Widget _menuButton(String label, String route, {bool primary = false}) {
     return RetroButton(
-      label: text,
+      label: label,
       primary: primary,
       minWidth: 260,
       onPressed: () {
-        if (_soundEffectsEnabled) {
-          SoundEffectsManager().playEffect('audio/button_click.wav');
-        }
-        if (reloadOnReturn) {
-          Navigator.pushNamed(context, route).then((_) => _loadSettings());
-        } else {
-          Navigator.pushNamed(context, route);
-        }
+        SoundEffectsManager().play(SoundEffect.click);
+        Navigator.pushNamed(context, route).then((_) => _applySettings());
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    if (_loading) {
       return const Scaffold(body: Center(child: RetroLoader()));
     }
 
-    final welcomeTitle = "Letter Champ";
-    final welcomeText =
-        _language == "sv"
-            ? "Hej! Är du redo att klara alla bokstäver?"
-            : "Hey! Are you ready to master all the letters?";
-    final startDrawingText = _language == "sv" ? "Spela nu" : "Play Now";
-    final settingsText = _language == "sv" ? "Inställningar" : "Settings";
-    final highScoresText = _language == "sv" ? "Högsta poäng" : "High Scores";
-    final instructionsText = _language == "sv" ? "Så spelar du" : "How to Play";
+    final bool swedish = _language == 'sv';
+    final String greeting =
+        swedish
+            ? 'Hej! Är du redo att klara alla bokstäver?'
+            : 'Hey! Are you ready to master all the letters?';
 
     return Scaffold(
       body: RetroBackground(
@@ -93,12 +78,11 @@ class LandingScreenState extends State<LandingScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
               children: <Widget>[
-                // Transparent AppBar that only carries the centered title.
                 AppBar(
                   backgroundColor: Colors.transparent,
                   elevation: 0,
                   centerTitle: true,
-                  title: Text(welcomeTitle, style: RetroText.style(20)),
+                  title: Text('Letter Champ', style: RetroText.style(20)),
                 ),
                 Expanded(
                   // Fill the space below the title so the character floats
@@ -115,7 +99,7 @@ class LandingScreenState extends State<LandingScreen> {
                             child: Column(
                               children: <Widget>[
                                 Text(
-                                  welcomeText,
+                                  greeting,
                                   style: RetroText.style(18),
                                   textAlign: TextAlign.center,
                                 ),
@@ -127,34 +111,25 @@ class LandingScreenState extends State<LandingScreen> {
                                   fit: BoxFit.contain,
                                 ),
                                 const Spacer(),
-                                _buildGameButton(
-                                  context,
-                                  startDrawingText,
+                                _menuButton(
+                                  swedish ? 'Spela nu' : 'Play Now',
                                   '/gameplay',
+                                  primary: true,
                                 ),
                                 const SizedBox(height: 15),
-                                _buildGameButton(
-                                  context,
-                                  highScoresText,
+                                _menuButton(
+                                  swedish ? 'Högsta poäng' : 'High Scores',
                                   '/highscore',
-                                  primary: false,
-                                  reloadOnReturn: true,
                                 ),
                                 const SizedBox(height: 15),
-                                _buildGameButton(
-                                  context,
-                                  instructionsText,
+                                _menuButton(
+                                  swedish ? 'Så spelar du' : 'How to Play',
                                   '/instructions',
-                                  primary: false,
-                                  reloadOnReturn: true,
                                 ),
                                 const SizedBox(height: 15),
-                                _buildGameButton(
-                                  context,
-                                  settingsText,
+                                _menuButton(
+                                  swedish ? 'Inställningar' : 'Settings',
                                   '/settings',
-                                  primary: false,
-                                  reloadOnReturn: true,
                                 ),
                                 const SizedBox(height: 32),
                               ],

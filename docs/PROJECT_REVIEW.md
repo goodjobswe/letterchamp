@@ -11,12 +11,17 @@ The five screens are the landing menu, gameplay, animated instructions, settings
 | Location | Responsibility |
 | --- | --- |
 | `lib/main.dart` | App bootstrap, theme, named routes, audio initialization |
-| `lib/screens/gameplay_screen.dart` | Letter selection, stroke validation, scoring, gestures, drawing, hint animation |
-| `lib/data/letter_stroke_paths.dart` | Checkpoints for upper/lowercase English and Swedish letters and digits |
+| `lib/screens/gameplay_screen.dart` | Letter selection, scoring, hints and messages |
+| `lib/screens/instruction_screen.dart` | Tutorial steps, with its own single-stroke L |
+| `lib/widgets/tracing_canvas.dart` | Tracing surface: design-space scaling, gestures and painting, shared by game and tutorial |
+| `lib/models/stroke_validator.dart` | Checks traced strokes against checkpoints; joins strokes drawn in one go |
+| `lib/models/game_rules.dart` | Bonus, penalty, hint cost and the streak formula |
 | `lib/models/stroke_checkpoint.dart` | Ordered checkpoint model |
-| `lib/screens/instruction_screen.dart` | Tutorial and its own example paths/painter |
+| `lib/data/letter_stroke_paths.dart` | Checkpoints for upper/lowercase English and Swedish letters and digits |
+| `lib/data/stroke_path_tools.dart` | Authoring helper that turns a drawn stroke into evenly spaced checkpoints |
+| `lib/theme/` | Palette, pixel-font text styles, retro widgets and stroke drawing |
 | `lib/services/settings_service.dart` | Settings, high score, and streak persistence |
-| `lib/services/*audio*`, `sound_effects_manager.dart` | Music, lifecycle handling, and effects |
+| `lib/services/music_manager.dart`, `sound_effects_manager.dart` | Music with lifecycle handling, and effects |
 | `android/`, `ios/` | Native app runners |
 
 ## Initial findings and recovery
@@ -85,5 +90,6 @@ Work done after the recovery, verified with `flutter analyze`, the six tests, a 
 - **CI (item 7, partly).** `.github/workflows/ci.yml` runs the format check, analysis, tests and a debug APK build. Gameplay widget tests are still missing.
 - **Emulator.** The quick-boot hang on the development machine was a snapshot saved from a hung instance; the development guide describes the fix.
 - **Assets.** The unused `game_bg2.png` was removed and the screenshots were retaken from the current build.
+- **Code quality pass.** Stroke validation, the tracing canvas and the path-authoring tool moved out of the screens into `lib/models`, `lib/widgets` and `lib/data`, removing the copies the game and tutorial each kept. The four nested attempts at matching joined strokes became one loop. Sound effects are an enum with an enabled flag on the manager, so screens no longer check the setting before every sound. The music player is `MusicManager` and no longer restarts the track when the menu re-reads settings. Screen state is private, scoring constants live in `GameRules`, and unit tests cover the validator and the bonus formula.
 
 Still open before or shortly after going public: choose and add a code license (item 1), run a dedicated secret scanner over the history (item 2), the descender and landscape checks (item 5), a newer Flutter baseline with the major package upgrades (item 6), gameplay tests (item 7), release signing, and iOS verification.

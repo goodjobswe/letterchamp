@@ -1,62 +1,38 @@
-import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:letterchamp/data/letter_stroke_paths.dart';
 import 'package:letterchamp/models/game_rules.dart';
 import 'package:letterchamp/models/stroke_checkpoint.dart';
+import 'package:letterchamp/models/stroke_validator.dart';
 import 'package:letterchamp/services/settings_service.dart';
 import 'package:letterchamp/services/sound_effects_manager.dart';
-import 'package:letterchamp/theme/retro_paint.dart';
 import 'package:letterchamp/theme/retro_theme.dart';
 import 'package:letterchamp/theme/retro_widgets.dart';
+import 'package:letterchamp/widgets/tracing_canvas.dart';
 
+/// The guided introduction: trace an A in three strokes and an L in one,
+/// then read how hints and scoring work.
 class InstructionScreen extends StatefulWidget {
   const InstructionScreen({super.key});
 
   @override
-  InstructionScreenState createState() => InstructionScreenState();
+  State<InstructionScreen> createState() => _InstructionScreenState();
 }
 
-class InstructionScreenState extends State<InstructionScreen>
+class _InstructionScreenState extends State<InstructionScreen>
     with SingleTickerProviderStateMixin {
-  final SettingsService settingsService = SettingsService();
+  static const List<String> _letters = ['A', 'L'];
 
-  // Predefined stroke paths for tutorial letters.
-  final Map<String, List<StrokeCheckpoints>> letterStrokePaths = {
-    'A': [
-      const StrokeCheckpoints(
-        start: Offset(150, 55),
-        inBetween: [
-          Offset(136.0, 92.5),
-          Offset(121.2, 130.9),
-          Offset(106.3, 169.3),
-          Offset(91.5, 207.7),
-        ],
-        end: Offset(77, 243),
-      ),
-      const StrokeCheckpoints(
-        start: Offset(150, 55),
-        inBetween: [
-          Offset(165.8, 92.5),
-          Offset(180.7, 130.9),
-          Offset(195.7, 169.3),
-          Offset(210.6, 207.7),
-        ],
-        end: Offset(222, 243),
-      ),
-      const StrokeCheckpoints(
-        start: Offset(97, 196),
-        inBetween: [Offset(131.4, 196.6), Offset(167.8, 196.4)],
-        end: Offset(207, 196),
-      ),
-    ],
+  /// The tutorial draws its L in a single stroke to teach continuous strokes;
+  /// the game's L in [letterStrokePaths] uses two.
+  static final Map<String, List<StrokeCheckpoints>> _paths = {
+    'A': letterStrokePaths['A']!,
     'L': [
       const StrokeCheckpoints(
         start: Offset(124, 61),
         inBetween: [
           Offset(124, 97.6),
           Offset(124, 134.6),
-          Offset(124.0, 171.7),
+          Offset(124, 171.7),
           Offset(124, 208.8),
           Offset(124, 243),
           Offset(160.5, 243),
@@ -66,159 +42,159 @@ class InstructionScreenState extends State<InstructionScreen>
     ],
   };
 
-  List<String> _letters = [];
-  bool _isLoading = true;
-  int _currentLetterIndex = 0;
-  String? letter; // Current letter used in tutorial.
-  String _language = "en"; // Default language.
-  int _helpStepIndex = 0;
-  bool _soundEffectsEnabled = false;
+  /// Steps before [_hintStep] each trace one stroke; the last two are text.
+  static const int _hintStep = 4;
+  static const int _scoringStep = 5;
 
-  // Tracing variables.
-  List<Offset> _userStroke = [];
-  final List<List<Offset>> _completedStrokes = [];
-  int currentStrokeIndex = 0;
-  late List<StrokeCheckpoints> strokeCheckpointsList;
-
-  // Help state.
-  bool _showHelp = false;
-  late AnimationController _helpAnimationController;
-  final Duration _helpDuration = const Duration(seconds: 1);
-
-  // Tutorial help messages.
-  final List<Map<String, String>> helpMessages = [
+  static const List<Map<String, String>> _stepMessages = [
     {
-      "sv": "Dra med fingret för att rita första delen.",
-      "en": "Drag your finger to draw the first part.",
+      'sv': 'Dra med fingret för att rita första delen.',
+      'en': 'Drag your finger to draw the first part.',
     },
     {
-      "sv": "Dra med fingret igen för nästa del.",
-      "en": "Drag your finger again for the next part.",
+      'sv': 'Dra med fingret igen för nästa del.',
+      'en': 'Drag your finger again for the next part.',
     },
     {
-      "sv": "Dra med fingret en gång till för sista delen.",
-      "en": "Drag your finger once more for the final part.",
+      'sv': 'Dra med fingret en gång till för sista delen.',
+      'en': 'Drag your finger once more for the final part.',
     },
     {
-      "sv":
-          "Vissa bokstäver ritas i ett enda drag.\n\nDra med fingret för att rita hela bokstaven.",
-      "en":
-          "Some letters are drawn in one stroke.\n\nDrag your finger to draw the whole letter.",
+      'sv':
+          'Vissa bokstäver ritas i ett enda drag.\n\nDra med fingret för att rita hela bokstaven.',
+      'en':
+          'Some letters are drawn in one stroke.\n\nDrag your finger to draw the whole letter.',
     },
     {
-      "sv":
-          "Tryck på frågetecknet uppe till höger om du behöver hjälp.\n\nDu får hjälp gratis första gången, sedan kostar det ${GameRules.hintCost} poäng.\n\nTryck på frågetecknet för att fortsätta.",
-      "en":
-          "Tap the question mark at the top right if you need a hint.\n\nThe first hint is free. After that a hint costs ${GameRules.hintCost} points.\n\nTap the question mark to continue.",
+      'sv':
+          'Tryck på frågetecknet uppe till höger om du behöver hjälp.\n\nDu får hjälp gratis första gången, sedan kostar det ${GameRules.hintCost} poäng.\n\nTryck på frågetecknet för att fortsätta.',
+      'en':
+          'Tap the question mark at the top right if you need a hint.\n\nThe first hint is free. After that a hint costs ${GameRules.hintCost} points.\n\nTap the question mark to continue.',
     },
     {
-      "sv":
-          "Rita bokstäverna på rätt sätt för att få poäng!\n\nFlera rätt i rad ger bonus. Ett misstag nollställer bonusen och kostar ${GameRules.strokePenalty} poäng.",
-      "en":
-          "Draw the letter correctly to earn points!\n\nCorrect letters in a row earn a bonus. A mistake resets your bonus and costs ${GameRules.strokePenalty} points.",
+      'sv':
+          'Rita bokstäverna på rätt sätt för att få poäng!\n\nFlera rätt i rad ger bonus. Ett misstag nollställer bonusen och kostar ${GameRules.strokePenalty} poäng.',
+      'en':
+          'Draw the letter correctly to earn points!\n\nCorrect letters in a row earn a bonus. A mistake resets your bonus and costs ${GameRules.strokePenalty} points.',
     },
   ];
+
+  /// The tutorial is stricter than the game so that the strokes it accepts
+  /// are clean examples.
+  static const double _tolerance = 20;
+
+  final SettingsService _settingsService = SettingsService();
+  late final AnimationController _hintAnimation = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 1),
+  );
+
+  bool _loading = true;
+  String _language = 'en';
+  int _step = 0;
+  int _letterIndex = 0;
+  int _strokeIndex = 0;
+  List<Offset> _userStroke = [];
+  final List<List<Offset>> _completedStrokes = [];
+  bool _showHint = false;
+
+  bool get _swedish => _language == 'sv';
+  String get _letter => _letters[_letterIndex];
+  List<StrokeCheckpoints> get _strokes => _paths[_letter]!;
+
+  /// True from the last accepted stroke until the next letter is shown.
+  bool get _letterComplete => _strokeIndex >= _strokes.length;
 
   @override
   void initState() {
     super.initState();
-    _loadSettingsAndGenerateDictionary();
-    _helpAnimationController = AnimationController(
-      vsync: this,
-      duration: _helpDuration,
-    );
-    // Add a single status listener for the help animation.
-    _helpAnimationController.addStatusListener((status) {
-      if (status == AnimationStatus.completed && _showHelp) {
+    // Replay the hint every few seconds for as long as it is shown.
+    _hintAnimation.addStatusListener((AnimationStatus status) {
+      if (status == AnimationStatus.completed && _showHint) {
         Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            _helpAnimationController.forward(from: 0.0);
-          }
+          if (mounted && _showHint) _hintAnimation.forward(from: 0);
         });
       }
     });
+    _loadSettings();
   }
 
   @override
   void dispose() {
-    _helpAnimationController.dispose();
+    _hintAnimation.dispose();
     super.dispose();
   }
 
-  Future<void> _loadSettingsAndGenerateDictionary() async {
-    await settingsService.init();
-    final language = await settingsService.getLanguage();
-    final soundEffectsEnabled = await settingsService.getSoundEffectsEnabled();
-    // Use only the tutorial letters.
-    List<String> formattedLetters = 'AL'.split('');
+  Future<void> _loadSettings() async {
+    final String language = await _settingsService.getLanguage();
+    SoundEffectsManager().enabled =
+        await _settingsService.getSoundEffectsEnabled();
     if (!mounted) return;
     setState(() {
-      _letters = formattedLetters;
-      _isLoading = false;
-      _currentLetterIndex = 0;
-      letter = _letters[_currentLetterIndex];
-      strokeCheckpointsList =
-          letterStrokePaths[letter!] as List<StrokeCheckpoints>;
       _language = language;
-      _soundEffectsEnabled = soundEffectsEnabled;
-      _requestHelp(); // Automatically show help on load.
+      _loading = false;
     });
+    _startHint();
   }
 
-  /// True from the last accepted stroke until the next letter is shown.
-  bool get _letterComplete =>
-      currentStrokeIndex >= strokeCheckpointsList.length;
+  void _startHint() {
+    setState(() => _showHint = true);
+    _hintAnimation.forward(from: 0);
+  }
 
-  // Advances the tutorial to the next letter.
   void _nextLetter() {
-    if (_currentLetterIndex < _letters.length - 1) {
-      _currentLetterIndex++;
-    } else {
-      _currentLetterIndex = 0;
-    }
     setState(() {
-      letter = _letters[_currentLetterIndex];
-      strokeCheckpointsList =
-          letterStrokePaths[letter!] as List<StrokeCheckpoints>;
-      currentStrokeIndex = 0;
+      _letterIndex = (_letterIndex + 1) % _letters.length;
+      _strokeIndex = 0;
       _completedStrokes.clear();
-      _userStroke.clear();
+      _userStroke = [];
     });
   }
 
-  // Sets the help overlay visible and starts the animation.
-  void _requestHelp() {
-    setState(() {
-      _showHelp = true;
-    });
-    if (mounted) {
-      _helpAnimationController.forward(from: 0.0);
+  /// Accepts or rejects the stroke just drawn and moves the tutorial on.
+  Future<void> _evaluateStroke() async {
+    if (_userStroke.isEmpty) return;
+    final bool accepted = StrokeValidator.matches(
+      _userStroke,
+      _strokes[_strokeIndex],
+      tolerance: _tolerance,
+      maxDeviation: _tolerance,
+    );
+    if (!accepted) {
+      SoundEffectsManager().play(SoundEffect.fail);
+      setState(() => _userStroke = []);
+      return;
     }
-  }
 
-  // Helper to build a common text style.
-  TextStyle _instructionTextStyle(double size, {bool withShadow = true}) {
-    return RetroText.style(size, shadow: withShadow);
-  }
+    _completedStrokes.add(List.of(_userStroke));
+    setState(() {
+      _userStroke = [];
+      _strokeIndex++;
+      _step++;
+      if (_step == _hintStep) _showHint = false;
+    });
+    if (!_letterComplete) {
+      SoundEffectsManager().play(SoundEffect.success);
+      return;
+    }
 
-  // Helper to build the main menu button.
-  Widget _buildMainMenuButton(String text, VoidCallback onPressed) {
-    return RetroButton(label: text, onPressed: onPressed);
+    SoundEffectsManager().play(SoundEffect.complete);
+    // Leave the finished letter on screen for a moment.
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+    _nextLetter();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading || letter == null) {
+    if (_loading) {
       return const Scaffold(
         body: RetroBackground(child: Center(child: RetroLoader())),
       );
     }
 
-    final String appBarTitle =
-        _language == "sv" ? "Så spelar du" : "How to Play";
-    final String mainMenuText = _language == "sv" ? "Huvudmeny" : "Main Menu";
-    final String message =
-        helpMessages[_helpStepIndex][_language == "sv" ? "sv" : "en"]!;
+    final String message = _stepMessages[_step][_swedish ? 'sv' : 'en']!;
+    final bool tracing = _step < _hintStep;
 
     return Scaffold(
       body: RetroBackground(
@@ -229,178 +205,50 @@ class InstructionScreenState extends State<InstructionScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Column(
                   children: [
-                    // Custom transparent AppBar with a back button.
                     AppBar(
                       backgroundColor: Colors.transparent,
                       elevation: 0,
                       leading: RetroIconButton(
                         glyph: PixelGlyph.arrowLeft,
+                        tooltip: _swedish ? 'Huvudmeny' : 'Main Menu',
                         onPressed: () {
-                          if (_soundEffectsEnabled) {
-                            SoundEffectsManager().playEffect(
-                              'audio/button_click.wav',
-                            );
-                          }
+                          SoundEffectsManager().play(SoundEffect.click);
                           Navigator.pop(context);
                         },
-                        tooltip: _language == "sv" ? "Huvudmeny" : "Main Menu",
                       ),
                       centerTitle: true,
                       title: Text(
-                        appBarTitle,
-                        style: _instructionTextStyle(16),
+                        _swedish ? 'Så spelar du' : 'How to Play',
+                        style: RetroText.style(16),
                       ),
                       actions: [
                         RetroIconButton(
                           glyph: PixelGlyph.question,
-                          tooltip: _language == "sv" ? "Hjälp" : "Hint",
+                          tooltip: _swedish ? 'Hjälp' : 'Hint',
                           onPressed: () {
-                            if (_soundEffectsEnabled) {
-                              SoundEffectsManager().playEffect(
-                                'audio/button_click.wav',
-                              );
-                            }
-                            if (_helpStepIndex == 4) {
-                              setState(() {
-                                _helpStepIndex++;
-                              });
-                            }
+                            SoundEffectsManager().play(SoundEffect.click);
+                            if (_step == _hintStep) setState(() => _step++);
                           },
                         ),
                       ],
                     ),
-                    // While letters are traced, the drawing area takes the whole
-                    // height and the instruction sits at the bottom, where the
-                    // game shows its messages.
-                    if (_helpStepIndex < 4) ...[
+                    if (tracing) ...[
                       Expanded(
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            const double designWidth = 300;
-                            const double designHeight = 300;
-                            final double scale = min(
-                              constraints.maxWidth / designWidth,
-                              constraints.maxHeight / designHeight,
-                            );
-                            final double dx =
-                                (constraints.maxWidth - designWidth * scale) /
-                                2;
-                            final double dy =
-                                (constraints.maxHeight - designHeight * scale) /
-                                2;
-                            return GestureDetector(
-                              onPanStart: (details) {
-                                // Ignore input while a finished letter is shown.
-                                if (_letterComplete) return;
-                                final Offset designPos =
-                                    (details.localPosition - Offset(dx, dy)) /
-                                    scale;
-                                setState(() {
-                                  _userStroke = [designPos];
-                                });
-                              },
-                              onPanUpdate: (details) {
-                                if (_letterComplete) return;
-                                final Offset designPos =
-                                    (details.localPosition - Offset(dx, dy)) /
-                                    scale;
-                                setState(() {
-                                  _userStroke.add(designPos);
-                                });
-                              },
-                              onPanEnd: (details) async {
-                                if (_letterComplete) return;
-                                final expectedStroke =
-                                    strokeCheckpointsList[currentStrokeIndex];
-                                bool valid = false;
-                                if (_userStroke.isEmpty) {
-                                  setState(() {
-                                    _userStroke = [];
-                                  });
-                                  return;
-                                }
-                                valid = _isStrokeValid(
-                                  _userStroke,
-                                  expectedStroke,
-                                  20.0,
-                                  20.0,
-                                );
-                                if (valid) {
-                                  if (_soundEffectsEnabled) {
-                                    SoundEffectsManager().playEffect(
-                                      'audio/success.wav',
-                                    );
-                                  }
-                                  setState(() {
-                                    _helpStepIndex++;
-                                    if (_helpStepIndex == 4) {
-                                      _showHelp = false;
-                                    }
-                                  });
-                                } else {
-                                  if (_soundEffectsEnabled) {
-                                    SoundEffectsManager().playEffect(
-                                      'audio/fail.wav',
-                                    );
-                                  }
-                                }
-                                if (currentStrokeIndex <
-                                        strokeCheckpointsList.length &&
-                                    valid) {
-                                  _completedStrokes.add(List.from(_userStroke));
-                                  currentStrokeIndex++;
-                                  if (currentStrokeIndex ==
-                                      strokeCheckpointsList.length) {
-                                    if (_soundEffectsEnabled) {
-                                      SoundEffectsManager().playEffect(
-                                        'audio/complete.wav',
-                                      );
-                                    }
-                                    // Clear the blue stroke immediately so the green one is visible.
-                                    setState(() {
-                                      _userStroke = [];
-                                    });
-                                    await Future.delayed(
-                                      const Duration(seconds: 1),
-                                    ); // Delay to show green stroke.
-                                    if (!mounted) return;
-                                    _nextLetter();
-                                    return;
-                                  }
-                                }
-                                setState(() {
-                                  _userStroke = [];
-                                });
-                              },
-                              child: AnimatedBuilder(
-                                animation: _helpAnimationController,
-                                builder: (context, child) {
-                                  return CustomPaint(
-                                    size: Size(
-                                      constraints.maxWidth,
-                                      constraints.maxHeight,
-                                    ),
-                                    painter: CheckpointPainter(
-                                      letter: letter!,
-                                      strokeCheckpoints:
-                                          currentStrokeIndex <
-                                                  strokeCheckpointsList.length
-                                              ? strokeCheckpointsList[currentStrokeIndex]
-                                              : null,
-                                      userStroke: _userStroke,
-                                      completedStrokes: _completedStrokes,
-                                      scale: scale,
-                                      dx: dx,
-                                      dy: dy,
-                                      showHelp: _showHelp,
-                                      helpProgress:
-                                          _helpAnimationController.value,
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
+                        child: TracingCanvas(
+                          letter: _letter,
+                          hint: _letterComplete ? null : _strokes[_strokeIndex],
+                          showHint: _showHint,
+                          hintAnimation: _hintAnimation,
+                          userStroke: _userStroke,
+                          completedStrokes: _completedStrokes,
+                          acceptsInput: !_letterComplete,
+                          onStrokeStart:
+                              (Offset point) =>
+                                  setState(() => _userStroke = [point]),
+                          onStrokeUpdate:
+                              (Offset point) =>
+                                  setState(() => _userStroke.add(point)),
+                          onStrokeEnd: _evaluateStroke,
                         ),
                       ),
                       // Same bottom reserve as the game, under the floating
@@ -415,16 +263,17 @@ class InstructionScreenState extends State<InstructionScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               RetroMessage(message, fontSize: 16),
-                              if (_helpStepIndex == 5) ...[
+                              if (_step == _scoringStep) ...[
                                 const SizedBox(height: 24),
-                                _buildMainMenuButton(mainMenuText, () {
-                                  if (_soundEffectsEnabled) {
-                                    SoundEffectsManager().playEffect(
-                                      'audio/button_click.wav',
+                                RetroButton(
+                                  label: _swedish ? 'Huvudmeny' : 'Main Menu',
+                                  onPressed: () {
+                                    SoundEffectsManager().play(
+                                      SoundEffect.click,
                                     );
-                                  }
-                                  Navigator.pop(context);
-                                }),
+                                    Navigator.pop(context);
+                                  },
+                                ),
                               ],
                             ],
                           ),
@@ -436,7 +285,7 @@ class InstructionScreenState extends State<InstructionScreen>
               ),
               // The instruction floats at the bottom like the game's
               // messages, so the drawing area keeps its size on every step.
-              if (_helpStepIndex < 4)
+              if (tracing)
                 Positioned(
                   left: 0,
                   right: 0,
@@ -452,112 +301,4 @@ class InstructionScreenState extends State<InstructionScreen>
       ),
     );
   }
-
-  bool _isStrokeValid(
-    List<Offset> stroke,
-    StrokeCheckpoints checkpoints,
-    double tolerance,
-    double maxDevTol,
-  ) {
-    final List<Offset> expectedPoints = checkpoints.points;
-    if (stroke.isEmpty) return false;
-    if ((stroke.first - expectedPoints.first).distance > tolerance) {
-      return false;
-    }
-    if ((stroke.last - expectedPoints.last).distance > tolerance) return false;
-
-    final List<int> hitIndices = [];
-    int cpIndex = 0;
-    for (int i = 0; i < stroke.length; i++) {
-      if (cpIndex >= expectedPoints.length) break;
-      if ((stroke[i] - expectedPoints[cpIndex]).distance <= tolerance) {
-        hitIndices.add(i);
-        cpIndex++;
-      }
-    }
-    if (hitIndices.length != expectedPoints.length) return false;
-
-    for (int j = 0; j < hitIndices.length - 1; j++) {
-      int startIndex = hitIndices[j];
-      int endIndex = hitIndices[j + 1];
-      final Offset p1 = expectedPoints[j];
-      final Offset p2 = expectedPoints[j + 1];
-      for (int k = startIndex; k <= endIndex; k++) {
-        final double d = distanceToSegment(stroke[k], p1, p2);
-        if (d > maxDevTol) return false;
-      }
-    }
-    return true;
-  }
-}
-
-double distanceToSegment(Offset p, Offset a, Offset b) {
-  final ap = p - a;
-  final ab = b - a;
-  final double ab2 = ab.dx * ab.dx + ab.dy * ab.dy;
-  if (ab2 == 0) return (p - a).distance;
-  double t = (ap.dx * ab.dx + ap.dy * ab.dy) / ab2;
-  t = t.clamp(0, 1);
-  final Offset closest = Offset(a.dx + ab.dx * t, a.dy + ab.dy * t);
-  return (p - closest).distance;
-}
-
-class CheckpointPainter extends CustomPainter {
-  final String letter;
-  final StrokeCheckpoints? strokeCheckpoints;
-  final List<Offset> userStroke;
-  final List<List<Offset>> completedStrokes;
-  final double scale;
-  final double dx;
-  final double dy;
-  final bool showHelp;
-  final double helpProgress; // 0.0 to 1.0
-
-  CheckpointPainter({
-    required this.letter,
-    required this.strokeCheckpoints,
-    required this.userStroke,
-    required this.completedStrokes,
-    required this.scale,
-    required this.dx,
-    required this.dy,
-    required this.showHelp,
-    required this.helpProgress,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.save();
-    canvas.translate(dx, dy);
-    canvas.scale(scale, scale);
-
-    // Draw the letter.
-    final TextSpan span = TextSpan(
-      text: letter,
-      style: GoogleFonts.poppins(fontSize: 300, color: RetroColors.letter),
-    );
-    final TextPainter tp = TextPainter(
-      text: span,
-      textAlign: TextAlign.center,
-      textDirection: TextDirection.ltr,
-    );
-    tp.layout();
-    final Offset textPos = Offset((300 - tp.width) / 2, (300 - tp.height) / 2);
-    tp.paint(canvas, textPos);
-
-    // Draw completed strokes.
-    RetroPaint.drawCompletedStrokes(canvas, completedStrokes);
-
-    // Draw expected stroke guidance if help is active.
-    if (strokeCheckpoints != null && showHelp) {
-      RetroPaint.drawHint(canvas, strokeCheckpoints!.points, helpProgress);
-    }
-
-    // Draw current user stroke.
-    RetroPaint.drawUserStroke(canvas, userStroke);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

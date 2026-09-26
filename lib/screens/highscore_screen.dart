@@ -4,128 +4,108 @@ import 'package:letterchamp/services/sound_effects_manager.dart';
 import 'package:letterchamp/theme/retro_theme.dart';
 import 'package:letterchamp/theme/retro_widgets.dart';
 
+/// Shows the best score and the longest streak, with a way to reset both.
 class HighscoreScreen extends StatefulWidget {
   const HighscoreScreen({super.key});
 
   @override
-  HighscoreScreenState createState() => HighscoreScreenState();
+  State<HighscoreScreen> createState() => _HighscoreScreenState();
 }
 
-class HighscoreScreenState extends State<HighscoreScreen> {
-  String _language = "en"; // default language
+class _HighscoreScreenState extends State<HighscoreScreen> {
+  final SettingsService _settingsService = SettingsService();
+
+  bool _loading = true;
+  String _language = 'en';
   int _highScore = 0;
-  int _highestStreak = 0;
-  bool _isLoading = true;
-  bool _soundEffectsEnabled = false;
-  final SettingsService settingsService = SettingsService();
+  int _longestStreak = 0;
+
+  bool get _swedish => _language == 'sv';
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _loadRecords();
   }
 
-  // Load language, high score, and highest streak.
-  Future<void> _loadData() async {
-    await settingsService.init();
-    final language = await settingsService.getLanguage();
-    final highScore = await settingsService.getHighScore();
-    final highestStreak = await settingsService.getHighestStreak();
-    final soundEffectsEnabled = await settingsService.getSoundEffectsEnabled();
+  Future<void> _loadRecords() async {
+    final String language = await _settingsService.getLanguage();
+    final int highScore = await _settingsService.getHighScore();
+    final int longestStreak = await _settingsService.getHighestStreak();
+    SoundEffectsManager().enabled =
+        await _settingsService.getSoundEffectsEnabled();
     if (!mounted) return;
     setState(() {
       _language = language;
       _highScore = highScore;
-      _highestStreak = highestStreak;
-      _isLoading = false;
-      _soundEffectsEnabled = soundEffectsEnabled;
+      _longestStreak = longestStreak;
+      _loading = false;
     });
   }
 
-  // Resets the high score (and streak) in settings.
-  Future<void> _resetHighScore() async {
-    await settingsService.resetHighScore();
-    await settingsService.resetHighestStreak();
-    final highScore = await settingsService.getHighScore();
-    final highestStreak = await settingsService.getHighestStreak();
+  Future<void> _resetRecords() async {
+    await _settingsService.resetHighScore();
+    await _settingsService.resetHighestStreak();
+    if (!mounted) return;
     setState(() {
-      _highScore = highScore;
-      _highestStreak = highestStreak;
+      _highScore = 0;
+      _longestStreak = 0;
     });
   }
 
-  // Shows a confirmation dialog before resetting the high score and streak.
   void _confirmReset() {
-    final confirmTitle = _language == "sv" ? "Bekräfta" : "Confirm";
-    final confirmContent =
-        _language == "sv"
-            ? "Är du säker på att du vill nollställa högsta poäng och flest rätt i rad?"
-            : "Are you sure you want to reset the high score and streak?";
-    final cancelText = _language == "sv" ? "Avbryt" : "Cancel";
-    final confirmText = _language == "sv" ? "Ja" : "Yes";
-
-    showDialog(
+    showDialog<void>(
       context: context,
       builder:
-          (context) => AlertDialog(
+          (BuildContext context) => AlertDialog(
             backgroundColor: RetroColors.ink,
             shape: RetroBox.dialogShape,
-            title: Text(confirmTitle, style: _headerTextStyle(18)),
-            content: Text(confirmContent, style: _headerTextStyle(16)),
+            title: Text(
+              _swedish ? 'Bekräfta' : 'Confirm',
+              style: RetroText.style(18),
+            ),
+            content: Text(
+              _swedish
+                  ? 'Är du säker på att du vill nollställa högsta poäng och flest rätt i rad?'
+                  : 'Are you sure you want to reset the high score and streak?',
+              style: RetroText.style(16),
+            ),
             actions: [
               TextButton(
                 onPressed: () {
-                  if (_soundEffectsEnabled) {
-                    SoundEffectsManager().playEffect('audio/cancel.wav');
-                  }
+                  SoundEffectsManager().play(SoundEffect.cancel);
                   Navigator.of(context).pop();
                 },
-                child: Text(cancelText, style: _headerTextStyle(12)),
+                child: Text(
+                  _swedish ? 'Avbryt' : 'Cancel',
+                  style: RetroText.style(12),
+                ),
               ),
               TextButton(
-                onPressed: () async {
-                  if (_soundEffectsEnabled) {
-                    SoundEffectsManager().playEffect('audio/button_click.wav');
-                  }
+                onPressed: () {
+                  SoundEffectsManager().play(SoundEffect.click);
                   Navigator.of(context).pop();
-                  await _resetHighScore();
+                  _resetRecords();
                 },
-                child: Text(confirmText, style: _headerTextStyle(12)),
+                child: Text(
+                  _swedish ? 'Ja' : 'Yes',
+                  style: RetroText.style(12),
+                ),
               ),
             ],
           ),
     );
   }
 
-  TextStyle _headerTextStyle(double size) {
-    return RetroText.style(size);
-  }
-
-  // Common button decoration for consistency.
-  Widget _buildMenuButton(String text, VoidCallback onPressed) {
-    return RetroButton(label: text, onPressed: onPressed);
-  }
-
-  // Button style for the reset button.
-  Widget _buildResetButton(String text, VoidCallback onPressed) {
-    return RetroButton(label: text, onPressed: onPressed, primary: false);
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    if (_loading) {
       return const Scaffold(
         body: RetroBackground(child: Center(child: RetroLoader())),
       );
     }
 
-    final String titleText = _language == "sv" ? "Högsta poäng" : "High Scores";
-    final String highScoreLabel =
-        _language == "sv" ? "Högsta poäng" : "High Score";
-    final String streakLabel =
-        _language == "sv" ? "Flest rätt i rad" : "Longest Streak";
-    final String mainMenuText = _language == "sv" ? "Huvudmeny" : "Main Menu";
-    final String resetText = _language == "sv" ? "Nollställ" : "Reset";
+    final String mainMenuText = _swedish ? 'Huvudmeny' : 'Main Menu';
 
     return Scaffold(
       body: RetroBackground(
@@ -134,24 +114,22 @@ class HighscoreScreenState extends State<HighscoreScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
               children: [
-                // Transparent AppBar with back button.
                 AppBar(
                   backgroundColor: Colors.transparent,
                   elevation: 0,
                   leading: RetroIconButton(
                     glyph: PixelGlyph.arrowLeft,
+                    tooltip: mainMenuText,
                     onPressed: () {
-                      if (_soundEffectsEnabled) {
-                        SoundEffectsManager().playEffect(
-                          'audio/button_click.wav',
-                        );
-                      }
+                      SoundEffectsManager().play(SoundEffect.click);
                       Navigator.pop(context);
                     },
-                    tooltip: _language == "sv" ? "Huvudmeny" : "Main Menu",
                   ),
                   centerTitle: true,
-                  title: Text(titleText, style: _headerTextStyle(16)),
+                  title: Text(
+                    _swedish ? 'Högsta poäng' : 'High Scores',
+                    style: RetroText.style(16),
+                  ),
                 ),
                 Expanded(
                   child: SingleChildScrollView(
@@ -169,39 +147,34 @@ class HighscoreScreenState extends State<HighscoreScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // High Score display.
-                            Text(highScoreLabel, style: _headerTextStyle(20)),
                             Text(
-                              _highScore.toString(),
-                              style: _headerTextStyle(28),
+                              _swedish ? 'Högsta poäng' : 'High Score',
+                              style: RetroText.style(20),
                             ),
+                            Text('$_highScore', style: RetroText.style(28)),
                             const SizedBox(height: 20),
-                            // Highest Streak display.
-                            Text(streakLabel, style: _headerTextStyle(20)),
                             Text(
-                              _highestStreak.toString(),
-                              style: _headerTextStyle(28),
+                              _swedish ? 'Flest rätt i rad' : 'Longest Streak',
+                              style: RetroText.style(20),
                             ),
+                            Text('$_longestStreak', style: RetroText.style(28)),
                             const SizedBox(height: 36),
-                            // Main Menu Button.
-                            _buildMenuButton(mainMenuText, () {
-                              if (_soundEffectsEnabled) {
-                                SoundEffectsManager().playEffect(
-                                  'audio/button_click.wav',
-                                );
-                              }
-                              Navigator.pop(context);
-                            }),
+                            RetroButton(
+                              label: mainMenuText,
+                              onPressed: () {
+                                SoundEffectsManager().play(SoundEffect.click);
+                                Navigator.pop(context);
+                              },
+                            ),
                             const SizedBox(height: 15),
-                            // Reset Button.
-                            _buildResetButton(resetText, () {
-                              if (_soundEffectsEnabled) {
-                                SoundEffectsManager().playEffect(
-                                  'audio/button_click.wav',
-                                );
-                              }
-                              _confirmReset();
-                            }),
+                            RetroButton(
+                              label: _swedish ? 'Nollställ' : 'Reset',
+                              primary: false,
+                              onPressed: () {
+                                SoundEffectsManager().play(SoundEffect.click);
+                                _confirmReset();
+                              },
+                            ),
                           ],
                         ),
                       ),
