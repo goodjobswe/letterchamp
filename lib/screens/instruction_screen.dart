@@ -2,9 +2,13 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:letterchamp/models/game_rules.dart';
 import 'package:letterchamp/models/stroke_checkpoint.dart';
 import 'package:letterchamp/services/settings_service.dart';
 import 'package:letterchamp/services/sound_effects_manager.dart';
+import 'package:letterchamp/theme/retro_paint.dart';
+import 'package:letterchamp/theme/retro_theme.dart';
+import 'package:letterchamp/theme/retro_widgets.dart';
 
 class InstructionScreen extends StatefulWidget {
   const InstructionScreen({super.key});
@@ -26,7 +30,7 @@ class InstructionScreenState extends State<InstructionScreen>
           Offset(136.0, 92.5),
           Offset(121.2, 130.9),
           Offset(106.3, 169.3),
-          Offset(91.5, 207.7)
+          Offset(91.5, 207.7),
         ],
         end: Offset(77, 243),
       ),
@@ -36,7 +40,7 @@ class InstructionScreenState extends State<InstructionScreen>
           Offset(165.8, 92.5),
           Offset(180.7, 130.9),
           Offset(195.7, 169.3),
-          Offset(210.6, 207.7)
+          Offset(210.6, 207.7),
         ],
         end: Offset(222, 243),
       ),
@@ -55,7 +59,7 @@ class InstructionScreenState extends State<InstructionScreen>
           Offset(124.0, 171.7),
           Offset(124, 208.8),
           Offset(124, 243),
-          Offset(160.5, 243)
+          Offset(160.5, 243),
         ],
         end: Offset(197, 243),
       ),
@@ -86,33 +90,33 @@ class InstructionScreenState extends State<InstructionScreen>
   final List<Map<String, String>> helpMessages = [
     {
       "sv": "Dra med fingret för att rita första delen.",
-      "en": "Drag your finger to draw the first part."
+      "en": "Drag your finger to draw the first part.",
     },
     {
       "sv": "Dra med fingret igen för nästa del.",
-      "en": "Drag your finger again for the next part."
+      "en": "Drag your finger again for the next part.",
     },
     {
       "sv": "Dra med fingret en gång till för sista delen.",
-      "en": "Drag your finger once more for the final part."
+      "en": "Drag your finger once more for the final part.",
     },
     {
       "sv":
-      "Vissa bokstäver kan ritas med en kontinuerlig linje.\n\nDra fingret för att rita hela bokstaven.",
+          "Vissa bokstäver ritas i ett enda drag.\n\nDra med fingret för att rita hela bokstaven.",
       "en":
-      "Some letters can be drawn with one continuous stroke.\n\nDrag your finger to draw the whole letter."
+          "Some letters are drawn in one stroke.\n\nDrag your finger to draw the whole letter.",
     },
     {
       "sv":
-      "Tryck på frågetecknet uppe till höger om du behöver hjälp.\n\nFörsta hjälpen är gratis, därefter kostar den 5 poäng.\n\nTryck på frågetecknet för att fortsätta.",
+          "Tryck på frågetecknet uppe till höger om du behöver hjälp.\n\nDu får hjälp gratis första gången, sedan kostar det ${GameRules.hintCost} poäng.\n\nTryck på frågetecknet för att fortsätta.",
       "en":
-      "Tap the question mark at the top right if you need help.\n\nFirst help is free, thereafter it costs 5 points.\n\nTap the question mark to continue."
+          "Tap the question mark at the top right if you need a hint.\n\nThe first hint is free. After that a hint costs ${GameRules.hintCost} points.\n\nTap the question mark to continue.",
     },
     {
       "sv":
-      "Rita bokstäverna på rätt sätt för att få poäng!\n\nFlera rätt i rad ger bonus. Ett misstag nollställer bonusen och kostar 2 poäng.",
+          "Rita bokstäverna på rätt sätt för att få poäng!\n\nFlera rätt i rad ger bonus. Ett misstag nollställer bonusen och kostar ${GameRules.strokePenalty} poäng.",
       "en":
-      "Draw the letter correctly to receive points!\n\nConsecutive letters earn bonus. A mistake resets your bonus and costs 2 points."
+          "Draw the letter correctly to earn points!\n\nCorrect letters in a row earn a bonus. A mistake resets your bonus and costs ${GameRules.strokePenalty} points.",
     },
   ];
 
@@ -148,18 +152,23 @@ class InstructionScreenState extends State<InstructionScreen>
     final soundEffectsEnabled = await settingsService.getSoundEffectsEnabled();
     // Use only the tutorial letters.
     List<String> formattedLetters = 'AL'.split('');
+    if (!mounted) return;
     setState(() {
       _letters = formattedLetters;
       _isLoading = false;
       _currentLetterIndex = 0;
       letter = _letters[_currentLetterIndex];
       strokeCheckpointsList =
-      letterStrokePaths[letter!] as List<StrokeCheckpoints>;
+          letterStrokePaths[letter!] as List<StrokeCheckpoints>;
       _language = language;
       _soundEffectsEnabled = soundEffectsEnabled;
       _requestHelp(); // Automatically show help on load.
     });
   }
+
+  /// True from the last accepted stroke until the next letter is shown.
+  bool get _letterComplete =>
+      currentStrokeIndex >= strokeCheckpointsList.length;
 
   // Advances the tutorial to the next letter.
   void _nextLetter() {
@@ -171,7 +180,7 @@ class InstructionScreenState extends State<InstructionScreen>
     setState(() {
       letter = _letters[_currentLetterIndex];
       strokeCheckpointsList =
-      letterStrokePaths[letter!] as List<StrokeCheckpoints>;
+          letterStrokePaths[letter!] as List<StrokeCheckpoints>;
       currentStrokeIndex = 0;
       _completedStrokes.clear();
       _userStroke.clear();
@@ -190,308 +199,248 @@ class InstructionScreenState extends State<InstructionScreen>
 
   // Helper to build a common text style.
   TextStyle _instructionTextStyle(double size, {bool withShadow = true}) {
-    return GoogleFonts.pressStart2p(
-      textStyle: TextStyle(
-        fontSize: size,
-        color: Colors.white,
-        shadows: withShadow
-            ? const [
-          Shadow(
-            blurRadius: 10,
-            color: Colors.black,
-            offset: Offset(2, 2),
-          )
-        ]
-            : null,
-      ),
-    );
+    return RetroText.style(size, shadow: withShadow);
   }
 
   // Helper to build the main menu button.
   Widget _buildMainMenuButton(String text, VoidCallback onPressed) {
-    return ElevatedButton(
-      style: ButtonStyle(
-        backgroundColor: WidgetStateProperty.all(Colors.transparent),
-        elevation: WidgetStateProperty.all(0),
-        padding: WidgetStateProperty.all(EdgeInsets.zero),
-        shape: WidgetStateProperty.all(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-        ),
-      ),
-      onPressed: onPressed,
-      child: Ink(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xfff45d27), Color(0xfff5851f)],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black45,
-              blurRadius: 5,
-              offset: Offset(3, 3),
-            ),
-          ],
-        ),
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 150, minHeight: 50),
-          alignment: Alignment.center,
-          child: Text(
-            text,
-            style: _instructionTextStyle(16, withShadow: false),
-          ),
-        ),
-      ),
-    );
+    return RetroButton(label: text, onPressed: onPressed);
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading || letter == null) {
-      return Scaffold(
-        body: Stack(
-          children: [
-            Container(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/game_bg.png'),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            Container(
-              color: const Color.fromRGBO(0, 0, 0, 0.4),
-            ),
-            const Center(child: CircularProgressIndicator()),
-          ],
-        ),
+      return const Scaffold(
+        body: RetroBackground(child: Center(child: RetroLoader())),
       );
     }
 
     final String appBarTitle =
-    _language == "sv" ? "Instruktioner" : "Instructions";
+        _language == "sv" ? "Så spelar du" : "How to Play";
     final String mainMenuText = _language == "sv" ? "Huvudmeny" : "Main Menu";
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background image.
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/game_bg.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          // Dark overlay.
-          Container(
-            color: const Color.fromRGBO(0, 0, 0, 0.4),
-          ),
-          // Main content.
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Column(
-                children: [
-                  // Custom transparent AppBar with a back button.
-                  AppBar(
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    leading: IconButton(
-                      icon:
-                      const Icon(Icons.arrow_back, color: Colors.white),
-                      iconSize: 36,
+      body: RetroBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Column(
+              children: [
+                // Custom transparent AppBar with a back button.
+                AppBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  leading: RetroIconButton(
+                    glyph: PixelGlyph.arrowLeft,
+                    onPressed: () {
+                      if (_soundEffectsEnabled) {
+                        SoundEffectsManager().playEffect(
+                          'audio/button_click.wav',
+                        );
+                      }
+                      Navigator.pop(context);
+                    },
+                    tooltip: _language == "sv" ? "Huvudmeny" : "Main Menu",
+                  ),
+                  centerTitle: true,
+                  title: Text(appBarTitle, style: _instructionTextStyle(16)),
+                  actions: [
+                    RetroIconButton(
+                      glyph: PixelGlyph.question,
+                      tooltip: _language == "sv" ? "Hjälp" : "Hint",
                       onPressed: () {
                         if (_soundEffectsEnabled) {
-                          SoundEffectsManager()
-                              .playEffect('audio/button_click.wav');
+                          SoundEffectsManager().playEffect(
+                            'audio/button_click.wav',
+                          );
                         }
-                        Navigator.pop(context);
+                        if (_helpStepIndex == 4) {
+                          setState(() {
+                            _helpStepIndex++;
+                          });
+                        }
                       },
-                      tooltip:
-                      _language == "sv" ? "Huvudmeny" : "Main Menu",
                     ),
-                    centerTitle: true,
-                    title: Text(
-                      appBarTitle,
-                      style: _instructionTextStyle(16),
-                    ),
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Icons.help_outline,
-                            color: Colors.white),
-                        iconSize: 36,
-                        onPressed: () {
-                          if (_soundEffectsEnabled) {
-                            SoundEffectsManager().playEffect('audio/button_click.wav');
-                          }
-                          if (_helpStepIndex == 4) {
+                  ],
+                ),
+                // Drawing area.
+                if (_helpStepIndex < 4)
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        const double designWidth = 300;
+                        const double designHeight = 300;
+                        final double scale = min(
+                          constraints.maxWidth / designWidth,
+                          constraints.maxHeight / designHeight,
+                        );
+                        final double dx =
+                            (constraints.maxWidth - designWidth * scale) / 2;
+                        final double dy =
+                            (constraints.maxHeight - designHeight * scale) / 2;
+                        return GestureDetector(
+                          onPanStart: (details) {
+                            // Ignore input while a finished letter is shown.
+                            if (_letterComplete) return;
+                            final Offset designPos =
+                                (details.localPosition - Offset(dx, dy)) /
+                                scale;
                             setState(() {
-                              _helpStepIndex++;
+                              _userStroke = [designPos];
                             });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                  // Drawing area.
-                  if (_helpStepIndex < 4)
-                    Expanded(
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          const double designWidth = 300;
-                          const double designHeight = 300;
-                          final double scale = min(constraints.maxWidth /
-                              designWidth, constraints.maxHeight /
-                              designHeight);
-                          final double dx = (constraints.maxWidth -
-                              designWidth * scale) /
-                              2;
-                          final double dy = (constraints.maxHeight -
-                              designHeight * scale) /
-                              2;
-                          return GestureDetector(
-                            onPanStart: (details) {
-                              final Offset designPos =
-                                  (details.localPosition -
-                                      Offset(dx, dy)) /
-                                      scale;
-                              setState(() {
-                                _userStroke = [designPos];
-                              });
-                            },
-                            onPanUpdate: (details) {
-                              final Offset designPos =
-                                  (details.localPosition -
-                                      Offset(dx, dy)) /
-                                      scale;
-                              setState(() {
-                                _userStroke.add(designPos);
-                              });
-                            },
-                            onPanEnd: (details) async {
-                              final expectedStroke =
-                              strokeCheckpointsList[currentStrokeIndex];
-                              bool valid = false;
-                              if (_userStroke.isEmpty) {
-                                setState(() {
-                                  _userStroke = [];
-                                });
-                                return;
-                              }
-                              valid = _isStrokeValid(_userStroke, expectedStroke, 20.0, 20.0);
-                              if (valid) {
-                                if (_soundEffectsEnabled) {
-                                  SoundEffectsManager().playEffect('audio/success.wav');
-                                }
-                                setState(() {
-                                  _helpStepIndex++;
-                                  if (_helpStepIndex == 4) {
-                                    _showHelp = false;
-                                    columnAlignment = MainAxisAlignment.center;
-                                  }
-                                });
-                              } else {
-                                if (_soundEffectsEnabled) {
-                                  SoundEffectsManager().playEffect('audio/fail.wav');
-                                }
-                              }
-                              if (currentStrokeIndex < strokeCheckpointsList.length && valid) {
-                                _completedStrokes.add(List.from(_userStroke));
-                                currentStrokeIndex++;
-                                if (currentStrokeIndex == strokeCheckpointsList.length) {
-                                  if (_soundEffectsEnabled) {
-                                    SoundEffectsManager().playEffect('audio/complete.wav');
-                                  }
-                                  // Clear the blue stroke immediately so the green one is visible.
-                                  setState(() {
-                                    _userStroke = [];
-                                  });
-                                  await Future.delayed(const Duration(seconds: 1)); // Delay to show green stroke.
-                                  _nextLetter();
-                                  return;
-                                }
-                              }
+                          },
+                          onPanUpdate: (details) {
+                            if (_letterComplete) return;
+                            final Offset designPos =
+                                (details.localPosition - Offset(dx, dy)) /
+                                scale;
+                            setState(() {
+                              _userStroke.add(designPos);
+                            });
+                          },
+                          onPanEnd: (details) async {
+                            if (_letterComplete) return;
+                            final expectedStroke =
+                                strokeCheckpointsList[currentStrokeIndex];
+                            bool valid = false;
+                            if (_userStroke.isEmpty) {
                               setState(() {
                                 _userStroke = [];
                               });
-                            },
-                            child: AnimatedBuilder(
-                              animation: _helpAnimationController,
-                              builder: (context, child) {
-                                return CustomPaint(
-                                  size: Size(constraints.maxWidth,
-                                      constraints.maxHeight),
-                                  painter: CheckpointPainter(
-                                    letter: letter!,
-                                    strokeCheckpoints:
-                                    currentStrokeIndex < strokeCheckpointsList.length
-                                        ? strokeCheckpointsList[currentStrokeIndex]
-                                        : null,
-                                    userStroke: _userStroke,
-                                    completedStrokes: _completedStrokes,
-                                    scale: scale,
-                                    dx: dx,
-                                    dy: dy,
-                                    showHelp: _showHelp,
-                                    helpProgress: _helpAnimationController.value,
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  const SizedBox(height: 20),
-                  // Instructional text and main menu button.
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: columnAlignment,
-                      children: [
-                        Text(
-                          _language == "sv"
-                              ? helpMessages[_helpStepIndex]["sv"]!
-                              : helpMessages[_helpStepIndex]["en"]!,
-                          textAlign: TextAlign.center,
-                          style: _instructionTextStyle(18),
-                        ),
-                        if (_helpStepIndex == 5) const SizedBox(height: 36),
-                        if (_helpStepIndex == 5)
-                          Center(
-                            child: _buildMainMenuButton(mainMenuText, () {
+                              return;
+                            }
+                            valid = _isStrokeValid(
+                              _userStroke,
+                              expectedStroke,
+                              20.0,
+                              20.0,
+                            );
+                            if (valid) {
                               if (_soundEffectsEnabled) {
-                                SoundEffectsManager()
-                                    .playEffect('audio/button_click.wav');
+                                SoundEffectsManager().playEffect(
+                                  'audio/success.wav',
+                                );
                               }
-                              Navigator.pop(context);
-                            }),
+                              setState(() {
+                                _helpStepIndex++;
+                                if (_helpStepIndex == 4) {
+                                  _showHelp = false;
+                                  columnAlignment = MainAxisAlignment.center;
+                                }
+                              });
+                            } else {
+                              if (_soundEffectsEnabled) {
+                                SoundEffectsManager().playEffect(
+                                  'audio/fail.wav',
+                                );
+                              }
+                            }
+                            if (currentStrokeIndex <
+                                    strokeCheckpointsList.length &&
+                                valid) {
+                              _completedStrokes.add(List.from(_userStroke));
+                              currentStrokeIndex++;
+                              if (currentStrokeIndex ==
+                                  strokeCheckpointsList.length) {
+                                if (_soundEffectsEnabled) {
+                                  SoundEffectsManager().playEffect(
+                                    'audio/complete.wav',
+                                  );
+                                }
+                                // Clear the blue stroke immediately so the green one is visible.
+                                setState(() {
+                                  _userStroke = [];
+                                });
+                                await Future.delayed(
+                                  const Duration(seconds: 1),
+                                ); // Delay to show green stroke.
+                                if (!mounted) return;
+                                _nextLetter();
+                                return;
+                              }
+                            }
+                            setState(() {
+                              _userStroke = [];
+                            });
+                          },
+                          child: AnimatedBuilder(
+                            animation: _helpAnimationController,
+                            builder: (context, child) {
+                              return CustomPaint(
+                                size: Size(
+                                  constraints.maxWidth,
+                                  constraints.maxHeight,
+                                ),
+                                painter: CheckpointPainter(
+                                  letter: letter!,
+                                  strokeCheckpoints:
+                                      currentStrokeIndex <
+                                              strokeCheckpointsList.length
+                                          ? strokeCheckpointsList[currentStrokeIndex]
+                                          : null,
+                                  userStroke: _userStroke,
+                                  completedStrokes: _completedStrokes,
+                                  scale: scale,
+                                  dx: dx,
+                                  dy: dy,
+                                  showHelp: _showHelp,
+                                  helpProgress: _helpAnimationController.value,
+                                ),
+                              );
+                            },
                           ),
-                      ],
+                        );
+                      },
                     ),
                   ),
-                  const SizedBox(height: 40),
-                ],
-              ),
+                const SizedBox(height: 20),
+                // Instructional text and main menu button.
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: columnAlignment,
+                    children: [
+                      Text(
+                        _language == "sv"
+                            ? helpMessages[_helpStepIndex]["sv"]!
+                            : helpMessages[_helpStepIndex]["en"]!,
+                        textAlign: TextAlign.center,
+                        style: _instructionTextStyle(18),
+                      ),
+                      if (_helpStepIndex == 5) const SizedBox(height: 36),
+                      if (_helpStepIndex == 5)
+                        Center(
+                          child: _buildMainMenuButton(mainMenuText, () {
+                            if (_soundEffectsEnabled) {
+                              SoundEffectsManager().playEffect(
+                                'audio/button_click.wav',
+                              );
+                            }
+                            Navigator.pop(context);
+                          }),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 40),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   bool _isStrokeValid(
-      List<Offset> stroke,
-      StrokeCheckpoints checkpoints,
-      double tolerance,
-      double maxDevTol,
-      ) {
+    List<Offset> stroke,
+    StrokeCheckpoints checkpoints,
+    double tolerance,
+    double maxDevTol,
+  ) {
     final List<Offset> expectedPoints = checkpoints.points;
     if (stroke.isEmpty) return false;
-    if ((stroke.first - expectedPoints.first).distance > tolerance) return false;
+    if ((stroke.first - expectedPoints.first).distance > tolerance) {
+      return false;
+    }
     if ((stroke.last - expectedPoints.last).distance > tolerance) return false;
 
     final List<int> hitIndices = [];
@@ -562,10 +511,7 @@ class CheckpointPainter extends CustomPainter {
     // Draw the letter.
     final TextSpan span = TextSpan(
       text: letter,
-      style: GoogleFonts.poppins(
-        fontSize: 300,
-        color: Colors.grey.shade300,
-      ),
+      style: GoogleFonts.poppins(fontSize: 300, color: RetroColors.letter),
     );
     final TextPainter tp = TextPainter(
       text: span,
@@ -577,71 +523,15 @@ class CheckpointPainter extends CustomPainter {
     tp.paint(canvas, textPos);
 
     // Draw completed strokes.
-    if (completedStrokes.isNotEmpty) {
-      final Paint completedPaint = Paint()
-        ..color = const Color(0xFF32CD32)
-        ..strokeWidth = 8
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
-      for (var stroke in completedStrokes) {
-        if (stroke.isNotEmpty) {
-          if (stroke.length == 1) {
-            final Paint fillPaint = Paint()
-              ..color = Colors.blue
-              ..style = PaintingStyle.fill;
-            canvas.drawCircle(stroke.first, 8.0, fillPaint);
-          } else {
-            final Path path = Path()..moveTo(stroke.first.dx, stroke.first.dy);
-            for (final Offset p in stroke.skip(1)) {
-              path.lineTo(p.dx, p.dy);
-            }
-            canvas.drawPath(path, completedPaint);
-          }
-        }
-      }
-    }
+    RetroPaint.drawCompletedStrokes(canvas, completedStrokes);
 
     // Draw expected stroke guidance if help is active.
     if (strokeCheckpoints != null && showHelp) {
-      final List<Offset> points = strokeCheckpoints!.points;
-      for (int i = 0; i < points.length; i++) {
-        final Color color = i == 0
-            ? const Color(0xFF39FF14)
-            : (i == points.length - 1 ? const Color(0xFFFF073A) : Colors.grey);
-        final double radius = (i == 0 || i == points.length - 1) ? 8.0 : 4.0;
-        final Paint checkpointPaint = Paint()..color = color;
-        canvas.drawCircle(points[i], radius, checkpointPaint);
-      }
-      final Paint helpPaint = Paint()
-        ..color = Colors.amberAccent.shade700
-        ..strokeWidth = 4
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
-      final Path fullPath = Path()..moveTo(points.first.dx, points.first.dy);
-      for (final Offset p in points.skip(1)) {
-        fullPath.lineTo(p.dx, p.dy);
-      }
-      final Path animatedPath = Path();
-      for (final metric in fullPath.computeMetrics()) {
-        final double length = metric.length * helpProgress;
-        animatedPath.addPath(metric.extractPath(0, length), Offset.zero);
-      }
-      canvas.drawPath(animatedPath, helpPaint);
+      RetroPaint.drawHint(canvas, strokeCheckpoints!.points, helpProgress);
     }
 
     // Draw current user stroke.
-    if (userStroke.isNotEmpty) {
-      final Paint strokePaint = Paint()
-        ..color = const Color(0xFF00BFFF)
-        ..strokeWidth = 8
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
-      final Path path = Path()..moveTo(userStroke.first.dx, userStroke.first.dy);
-      for (final Offset p in userStroke.skip(1)) {
-        path.lineTo(p.dx, p.dy);
-      }
-      canvas.drawPath(path, strokePaint);
-    }
+    RetroPaint.drawUserStroke(canvas, userStroke);
     canvas.restore();
   }
 

@@ -9,7 +9,9 @@ class AudioManager with WidgetsBindingObserver {
   factory AudioManager() => _instance;
 
   AudioManager._internal() {
-    WidgetsBinding.instance.addObserver(this); // Listen for app lifecycle events
+    WidgetsBinding.instance.addObserver(
+      this,
+    ); // Listen for app lifecycle events
 
     // Set background music volume to 100%
     _player.setVolume(1.0);
@@ -25,7 +27,9 @@ class AudioManager with WidgetsBindingObserver {
           stayAwake: true,
           contentType: AndroidContentType.sonification,
           usageType: AndroidUsageType.game,
-          audioFocus: AndroidAudioFocus.gainTransientMayDuck, // Allows other sounds to play
+          audioFocus:
+              AndroidAudioFocus
+                  .gainTransientMayDuck, // Allows other sounds to play
         ),
         iOS: AudioContextIOS(
           category: AVAudioSessionCategory.playback,
@@ -47,7 +51,8 @@ class AudioManager with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
       // Pause music when app goes to background
       if (_isPlaying) {
         _player.pause();

@@ -9,6 +9,7 @@ import 'screens/highscore_screen.dart';
 import 'screens/instruction_screen.dart';
 import 'services/audio_manager.dart';
 import 'services/sound_effects_manager.dart';
+import 'theme/retro_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Letter Champ',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: retroThemeData(),
       // Define the initial route and map the named routes.
       initialRoute: '/',
       routes: {

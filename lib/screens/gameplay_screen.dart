@@ -3,10 +3,14 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:letterchamp/models/game_rules.dart';
 import 'package:letterchamp/models/stroke_checkpoint.dart';
 import 'package:letterchamp/services/settings_service.dart';
 import 'package:letterchamp/data/letter_stroke_paths.dart';
 import 'package:letterchamp/services/sound_effects_manager.dart';
+import 'package:letterchamp/theme/retro_paint.dart';
+import 'package:letterchamp/theme/retro_theme.dart';
+import 'package:letterchamp/theme/retro_widgets.dart';
 
 class GameplayScreen extends StatefulWidget {
   const GameplayScreen({super.key});
@@ -39,12 +43,12 @@ class GameplayScreenState extends State<GameplayScreen>
   int _score = 0;
   int _streak = 0;
   final int _baseLetterBonus = 10; // Base bonus for a correct letter.
-  final int _baseLetterPenalty = 2; // Penalty for an incorrect stroke.
+  final int _baseLetterPenalty = GameRules.strokePenalty;
   final double _maxMultiplier = 3.0; // Maximum bonus multiplier.
 
   // Help state.
   bool _showHelp = false;
-  final int _helpCost = 5; // Points deducted per help press.
+  final int _helpCost = GameRules.hintCost;
   late AnimationController _helpAnimationController;
   final Duration _helpDuration = const Duration(seconds: 1);
 
@@ -96,7 +100,7 @@ class GameplayScreenState extends State<GameplayScreen>
 
     // If numbers
     if (numbersEnabled) {
-      letters.addAll(['0','1','2','3','4','5','6','7','8','9']);
+      letters.addAll(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
     }
 
     // Determine letter order.
@@ -107,17 +111,21 @@ class GameplayScreenState extends State<GameplayScreen>
 
     // Adjust capitalization based on game mode.
     Random random = Random();
-    List<String> formattedLetters = letters.map((letter) {
-      if (gameMode == 'random') {
-        return random.nextBool() ? letter.toUpperCase() : letter.toLowerCase();
-      } else if (gameMode == 'uppercase') {
-        return letter.toUpperCase();
-      } else if (gameMode == 'lowercase') {
-        return letter.toLowerCase();
-      }
-      return letter; // fallback
-    }).toList();
+    List<String> formattedLetters =
+        letters.map((letter) {
+          if (gameMode == 'random') {
+            return random.nextBool()
+                ? letter.toUpperCase()
+                : letter.toLowerCase();
+          } else if (gameMode == 'uppercase') {
+            return letter.toUpperCase();
+          } else if (gameMode == 'lowercase') {
+            return letter.toLowerCase();
+          }
+          return letter; // fallback
+        }).toList();
 
+    if (!mounted) return;
     setState(() {
       _letters = formattedLetters;
       _isLoading = false;
@@ -125,7 +133,7 @@ class GameplayScreenState extends State<GameplayScreen>
       letter = _letters[_currentLetterIndex];
       // Cache the stroke checkpoints for the current letter.
       strokeCheckpointsList =
-      letterStrokePaths[letter!] as List<StrokeCheckpoints>;
+          letterStrokePaths[letter!] as List<StrokeCheckpoints>;
       _language = language; // Store language for later use.
       _soundEffectsEnabled = soundEffectsEnabled;
     });
@@ -135,12 +143,17 @@ class GameplayScreenState extends State<GameplayScreen>
       if (_soundEffectsEnabled) {
         SoundEffectsManager().playEffect('audio/start.wav');
       }
-      final String welcomeMessage = _language == "sv"
-          ? "Nu kör vi! Rita din första bokstav och starta ditt äventyr!"
-          : "Let's get started! Draw your first letter and kick off your adventure!";
+      final String welcomeMessage =
+          _language == "sv"
+              ? "Nu kör vi! Rita din första bokstav!"
+              : "Let's go! Draw your first letter!";
       _showSnackBar(welcomeMessage);
     });
   }
+
+  /// True from the last accepted stroke until the next letter is shown.
+  bool get _letterComplete =>
+      currentStrokeIndex >= strokeCheckpointsList.length;
 
   // Advances the game to the next letter.
   void _nextLetter() {
@@ -153,7 +166,7 @@ class GameplayScreenState extends State<GameplayScreen>
     setState(() {
       letter = _letters[_currentLetterIndex];
       strokeCheckpointsList =
-      letterStrokePaths[letter!] as List<StrokeCheckpoints>;
+          letterStrokePaths[letter!] as List<StrokeCheckpoints>;
       currentStrokeIndex = 0;
       _completedStrokes.clear();
       _userStroke.clear();
@@ -163,24 +176,7 @@ class GameplayScreenState extends State<GameplayScreen>
   // Displays a custom SnackBar with the provided message.
   void _showSnackBar(String message) {
     _scaffoldMessenger.hideCurrentSnackBar();
-    _scaffoldMessenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: GoogleFonts.pressStart2p(
-            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-          ),
-        ),
-        backgroundColor: Colors.black,
-        behavior: SnackBarBehavior.floating,
-        elevation: 0,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: const BorderSide(color: Colors.white),
-        ),
-      ),
-    );
+    _scaffoldMessenger.showSnackBar(retroSnackBar(message));
   }
 
   // Triggers the help animation and hides the help overlay after [delay].
@@ -204,9 +200,10 @@ class GameplayScreenState extends State<GameplayScreen>
 
     if (!_firstHelpUsed) {
       _firstHelpUsed = true;
-      final String helpCostMessage = _language == "sv"
-          ? "Första hjälpen är gratis! Nästa kostar $_helpCost poäng."
-          : "First help is free! Next help will cost $_helpCost points!";
+      final String helpCostMessage =
+          _language == "sv"
+              ? "Den här hjälpen är gratis. Nästa kostar $_helpCost poäng."
+              : "This hint is free. The next one costs $_helpCost points.";
       _showSnackBar(helpCostMessage);
       _triggerHelpAnimation(const Duration(seconds: 2));
     } else {
@@ -214,15 +211,17 @@ class GameplayScreenState extends State<GameplayScreen>
         setState(() {
           _score -= _helpCost;
         });
-        final String helpCostMessage = _language == "sv"
-            ? "Hjälp kostade $_helpCost poäng!"
-            : "Help cost $_helpCost points!";
+        final String helpCostMessage =
+            _language == "sv"
+                ? "Hjälpen kostade $_helpCost poäng."
+                : "That hint cost $_helpCost points.";
         _showSnackBar(helpCostMessage);
         _triggerHelpAnimation(const Duration(seconds: 1));
       } else {
-        final String notEnoughPointsMessage = _language == "sv"
-            ? "Inte tillräckligt med poäng för hjälp!"
-            : "Not enough points for help!";
+        final String notEnoughPointsMessage =
+            _language == "sv"
+                ? "Du behöver $_helpCost poäng för att få hjälp."
+                : "You need $_helpCost points for a hint.";
         _showSnackBar(notEnoughPointsMessage);
       }
     }
@@ -236,8 +235,10 @@ class GameplayScreenState extends State<GameplayScreen>
 
   // Processes the user stroke when the pan gesture ends.
   Future<void> _processUserStroke() async {
-    final List<Offset> inBetween =
-    getEvenlyDistributedPointsDynamic(_userStroke, 35.0);
+    final List<Offset> inBetween = getEvenlyDistributedPointsDynamic(
+      _userStroke,
+      35.0,
+    );
     if (kDebugMode) print("inBetween: $inBetween");
     final expectedStroke = strokeCheckpointsList[currentStrokeIndex];
     bool valid = false;
@@ -257,7 +258,9 @@ class GameplayScreenState extends State<GameplayScreen>
     } else {
       final double totalDistance = _calculateStrokeDistance(_userStroke);
       if (_userStroke.isEmpty || totalDistance < 20.0) {
-        if (kDebugMode) print("Stroke too short, ignoring. Total distance: $totalDistance");
+        if (kDebugMode) {
+          print("Stroke too short, ignoring. Total distance: $totalDistance");
+        }
         _resetUserStroke();
         return;
       }
@@ -268,7 +271,7 @@ class GameplayScreenState extends State<GameplayScreen>
         final nextExpected = strokeCheckpointsList[currentStrokeIndex + 1];
         List<Offset> combinedPoints = [
           ...expectedStroke.points,
-          ...nextExpected.points
+          ...nextExpected.points,
         ];
         valid = _isStrokeValid(
           _userStroke,
@@ -285,18 +288,20 @@ class GameplayScreenState extends State<GameplayScreen>
           additionalSegments = 1;
         } else if ((currentStrokeIndex + 2) < strokeCheckpointsList.length) {
           final nextNextExpected =
-          strokeCheckpointsList[currentStrokeIndex + 2];
+              strokeCheckpointsList[currentStrokeIndex + 2];
           List<Offset> tripleCombinedPoints = [
             ...expectedStroke.points,
             ...nextExpected.points,
-            ...nextNextExpected.points
+            ...nextNextExpected.points,
           ];
           valid = _isStrokeValid(
             _userStroke,
             StrokeCheckpoints(
               start: tripleCombinedPoints.first,
-              inBetween:
-              tripleCombinedPoints.sublist(1, tripleCombinedPoints.length - 1),
+              inBetween: tripleCombinedPoints.sublist(
+                1,
+                tripleCombinedPoints.length - 1,
+              ),
               end: tripleCombinedPoints.last,
             ),
             30.0,
@@ -307,19 +312,21 @@ class GameplayScreenState extends State<GameplayScreen>
             additionalSegments = 2;
           } else if ((currentStrokeIndex + 3) < strokeCheckpointsList.length) {
             final nextNextNextExpected =
-            strokeCheckpointsList[currentStrokeIndex + 3];
+                strokeCheckpointsList[currentStrokeIndex + 3];
             List<Offset> quadrupleCombinedPoints = [
               ...expectedStroke.points,
               ...nextExpected.points,
               ...strokeCheckpointsList[currentStrokeIndex + 2].points,
-              ...nextNextNextExpected.points
+              ...nextNextNextExpected.points,
             ];
             valid = _isStrokeValid(
               _userStroke,
               StrokeCheckpoints(
                 start: quadrupleCombinedPoints.first,
                 inBetween: quadrupleCombinedPoints.sublist(
-                    1, quadrupleCombinedPoints.length - 1),
+                  1,
+                  quadrupleCombinedPoints.length - 1,
+                ),
                 end: quadrupleCombinedPoints.last,
               ),
               30.0,
@@ -372,6 +379,7 @@ class GameplayScreenState extends State<GameplayScreen>
 
       final int oldHighScore = await settingsService.getHighScore();
       final int oldHighestStreak = await settingsService.getHighestStreak();
+      if (!mounted) return;
       _streak++;
       final int bonus = _calculateBonus();
       setState(() {
@@ -379,7 +387,7 @@ class GameplayScreenState extends State<GameplayScreen>
       });
       bool newHighScore = false;
       if (_score > oldHighScore) {
-        if(!_hasDisplayedHighScoreMessage){
+        if (!_hasDisplayedHighScoreMessage) {
           newHighScore = true;
           _hasDisplayedHighScoreMessage = true;
         }
@@ -390,34 +398,55 @@ class GameplayScreenState extends State<GameplayScreen>
       }
       final Random random = Random();
       final List<String> englishGreetings = [
-        "Great job!", "Awesome work!", "Fantastic!", "Brilliant!", "Well done!",
-        "Superb!", "Excellent!", "Keep it up!", "Outstanding!", "You're on fire!"
+        "Great job!",
+        "Awesome work!",
+        "Fantastic!",
+        "Brilliant!",
+        "Well done!",
+        "Superb!",
+        "Excellent!",
+        "Keep it up!",
+        "Outstanding!",
+        "You're on fire!",
       ];
       final List<String> swedishGreetings = [
-        "Bra jobbat!", "Fantastiskt!", "Strålande!", "Utmärkt!", "Toppen!",
-        "Suveränt!", "Jättebra!", "Fortsätt så!", "Enastående!", "Du är grym!"
+        "Bra jobbat!",
+        "Fantastiskt!",
+        "Strålande!",
+        "Utmärkt!",
+        "Toppen!",
+        "Suveränt!",
+        "Jättebra!",
+        "Fortsätt så!",
+        "Enastående!",
+        "Du är grym!",
       ];
-      final String greeting = _language == "sv"
-          ? swedishGreetings[random.nextInt(swedishGreetings.length)]
-          : englishGreetings[random.nextInt(englishGreetings.length)];
-      final String streakMessage = _streak > 1
-          ? _language == "sv"
-          ? " $_streak i rad bonus!"
-          : " $_streak in a row bonus!"
-          : "";
-      final String newHighScoreMessage = newHighScore
-          ? _language == "sv"
-          ? " Nytt rekord!"
-          : " New high score!"
-          : "";
-      final String snackMessage = _language == "sv"
-          ? "$greeting Du fick $bonus poäng.$streakMessage$newHighScoreMessage"
-          : "$greeting You earned $bonus points.$streakMessage$newHighScoreMessage";
+      final String greeting =
+          _language == "sv"
+              ? swedishGreetings[random.nextInt(swedishGreetings.length)]
+              : englishGreetings[random.nextInt(englishGreetings.length)];
+      final String streakMessage =
+          _streak > 1
+              ? _language == "sv"
+                  ? " $_streak rätt i rad!"
+                  : " $_streak in a row!"
+              : "";
+      final String newHighScoreMessage =
+          newHighScore
+              ? _language == "sv"
+                  ? " Nytt rekord!"
+                  : " New high score!"
+              : "";
+      final String snackMessage =
+          _language == "sv"
+              ? "$greeting Du fick $bonus poäng.$streakMessage$newHighScoreMessage"
+              : "$greeting You earned $bonus points.$streakMessage$newHighScoreMessage";
 
       _showSnackBar(snackMessage);
 
       // Delay so the player can see the finished letter with the green stroke.
-      await Future.delayed(const Duration(seconds: 1)); // Adjust delay as needed.
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mounted) return;
       _nextLetter();
     } else {
       if (_soundEffectsEnabled) {
@@ -436,224 +465,172 @@ class GameplayScreenState extends State<GameplayScreen>
       _score -= _baseLetterPenalty;
     });
     final Random random = Random();
+    // Short openers; the line after them already says "Try again!".
     final List<String> englishErrorMessages = [
-      "Oops! That didn't work.",
-      "Whoops! That wasn't quite right.",
-      "Hmm, something went wrong.",
-      "Oh no! That stroke didn't count.",
-      "Yikes! That didn't come out as expected.",
-      "Darn! Let's try that stroke again.",
-      "Uh-oh! That stroke missed the mark.",
-      "Oops! Not quite right.",
-      "Ah, that didn't work. Give it another go!",
-      "Oops! Let's try that again."
+      "Oops!",
+      "Not quite!",
+      "Almost!",
+      "So close!",
+      "Whoops!",
+      "That one didn't count.",
     ];
     final List<String> swedishErrorMessages = [
-      "Oj då! Det blev fel.",
-      "Oj, det var inte rätt.",
-      "Hmm, något gick snett.",
-      "Åh nej! Den linjen räknades inte.",
-      "Oj, det blev inte som förväntat.",
-      "Aj då! Försök igen.",
-      "Hmm, den linjen blev inte rätt.",
-      "Oj, inte riktigt, försök igen!",
-      "Aj, det där blev inte som det skulle. Prova igen!",
-      "Oj, det där räckte inte. Försök en gång till!"
+      "Oj!",
+      "Inte riktigt!",
+      "Nästan!",
+      "Nära!",
+      "Hoppsan!",
+      "Den räknades inte.",
     ];
-    final String errorMessage = _language == "sv"
-        ? swedishErrorMessages[random.nextInt(swedishErrorMessages.length)]
-        : englishErrorMessages[random.nextInt(englishErrorMessages.length)];
-    final String snackMessage = _language == "sv"
-        ? "$errorMessage Du förlorade $_baseLetterPenalty poäng. Försök igen!"
-        : "$errorMessage You lost $_baseLetterPenalty points. Try again!";
+    final String errorMessage =
+        _language == "sv"
+            ? swedishErrorMessages[random.nextInt(swedishErrorMessages.length)]
+            : englishErrorMessages[random.nextInt(englishErrorMessages.length)];
+    final String snackMessage =
+        _language == "sv"
+            ? "$errorMessage Du förlorade $_baseLetterPenalty poäng. Försök igen!"
+            : "$errorMessage You lost $_baseLetterPenalty points. Try again!";
     _showSnackBar(snackMessage);
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading || letter == null) {
-      return Scaffold(
-        body: Stack(
-          children: [
-            Container(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/game_bg.png'),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            Container(
-              color: Color.fromRGBO(0, 0, 0, 0.4),
-            ),
-            const Center(child: CircularProgressIndicator()),
-          ],
-        ),
+      return const Scaffold(
+        body: RetroBackground(child: Center(child: RetroLoader())),
       );
     }
 
     final bool isNumeric = RegExp(r'^\d+$').hasMatch(letter!);
-    final String appBarTitle = _language == "sv"
-        ? (isNumeric ? "Siffra: $letter" : "Bokstav: $letter")
-        : (isNumeric ? "Number: $letter" : "Letter: $letter");
+    final String appBarTitle =
+        _language == "sv"
+            ? (isNumeric ? "Siffra: $letter" : "Bokstav: $letter")
+            : (isNumeric ? "Number: $letter" : "Letter: $letter");
     final String scoreText =
-    _language == "sv" ? "Poäng: $_score" : "Score: $_score";
+        _language == "sv" ? "Poäng: $_score" : "Score: $_score";
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background image.
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/game_bg.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          // Dark overlay.
-          Container(
-            color: Color.fromRGBO(0, 0, 0, 0.4),
-          ),
-          // Main content.
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Column(
-                children: [
-                  // Custom transparent AppBar with a back button.
-                  AppBar(
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    leading: IconButton(
-                      icon:
-                      const Icon(Icons.arrow_back, color: Colors.white),
-                      iconSize: 36,
+      body: RetroBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Column(
+              children: [
+                // Custom transparent AppBar with a back button.
+                AppBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  leading: RetroIconButton(
+                    glyph: PixelGlyph.arrowLeft,
+                    onPressed: () {
+                      if (_soundEffectsEnabled) {
+                        SoundEffectsManager().playEffect(
+                          'audio/button_click.wav',
+                        );
+                      }
+                      Navigator.pop(context);
+                    },
+                    tooltip: _language == "sv" ? "Huvudmeny" : "Main Menu",
+                  ),
+                  centerTitle: true,
+                  title: Text(appBarTitle, style: RetroText.style(16)),
+                  actions: [
+                    RetroIconButton(
+                      glyph: PixelGlyph.question,
+                      tooltip: _language == "sv" ? "Hjälp" : "Hint",
                       onPressed: () {
                         if (_soundEffectsEnabled) {
-                          SoundEffectsManager().playEffect('audio/button_click.wav');
+                          SoundEffectsManager().playEffect(
+                            'audio/button_click.wav',
+                          );
                         }
-                        Navigator.pop(context);
-                        },
-                      tooltip: _language == "sv"
-                          ? "Huvudmeny"
-                          : "Main Menu",
-                    ),
-                    centerTitle: true,
-                    title: Text(
-                      appBarTitle,
-                      style: GoogleFonts.pressStart2p(
-                        textStyle: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Icons.help_outline,
-                            color: Colors.white),
-                        iconSize: 36,
-                        onPressed: (){
-                          if (_soundEffectsEnabled) {
-                            SoundEffectsManager().playEffect('audio/button_click.wav');
-                          }
-                          _requestHelp();
-                          },
-                      ),
-                    ],
-                  ),
-                  // Display the score below the AppBar.
-                  Container(
-                    margin:
-                    const EdgeInsets.only(top: 8, bottom: 8),
-                    child: Text(
-                      scoreText,
-                      style: GoogleFonts.pressStart2p(
-                        textStyle: const TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                        ),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  // Drawing area.
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        const double designWidth = 300;
-                        const double designHeight = 300;
-                        final double scale = min(
-                            constraints.maxWidth / designWidth,
-                            constraints.maxHeight / designHeight);
-                        final double dx = (constraints.maxWidth -
-                            designWidth * scale) /
-                            2;
-                        final double dy = (constraints.maxHeight -
-                            designHeight * scale) /
-                            2;
-
-                        return GestureDetector(
-                          onPanStart: (details) {
-                            final Offset designPos =
-                                (details.localPosition -
-                                    Offset(dx, dy)) /
-                                    scale;
-                            if (kDebugMode) print("Offset: $designPos");
-                            setState(() {
-                              _userStroke = [designPos];
-                              _showHelp = false;
-                            });
-                          },
-                          onPanUpdate: (details) {
-                            final Offset designPos =
-                                (details.localPosition -
-                                    Offset(dx, dy)) /
-                                    scale;
-                            setState(() {
-                              _userStroke.add(designPos);
-                            });
-                          },
-                          onPanEnd: (details) async {
-                            await _processUserStroke();
-                          },
-                          child: AnimatedBuilder(
-                            animation: _helpAnimationController,
-                            builder: (context, child) {
-                              return CustomPaint(
-                                size: Size(constraints.maxWidth,
-                                    constraints.maxHeight),
-                                painter: CheckpointPainter(
-                                  letter: letter!,
-                                  strokeCheckpoints:
-                                  currentStrokeIndex <
-                                      strokeCheckpointsList.length
-                                      ? strokeCheckpointsList[
-                                  currentStrokeIndex]
-                                      : null,
-                                  userStroke: _userStroke,
-                                  completedStrokes: _completedStrokes,
-                                  scale: scale,
-                                  dx: dx,
-                                  dy: dy,
-                                  showHelp: _showHelp,
-                                  helpProgress:
-                                  _helpAnimationController.value,
-                                ),
-                              );
-                            },
-                          ),
-                        );
+                        _requestHelp();
                       },
                     ),
+                  ],
+                ),
+                // Display the score below the AppBar.
+                Container(
+                  margin: const EdgeInsets.only(top: 8, bottom: 8),
+                  child: Text(
+                    scoreText,
+                    style: RetroText.style(20),
+                    textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 100,),
-                ],
-              ),
+                ),
+                // Drawing area.
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      const double designWidth = 300;
+                      const double designHeight = 300;
+                      final double scale = min(
+                        constraints.maxWidth / designWidth,
+                        constraints.maxHeight / designHeight,
+                      );
+                      final double dx =
+                          (constraints.maxWidth - designWidth * scale) / 2;
+                      final double dy =
+                          (constraints.maxHeight - designHeight * scale) / 2;
+
+                      return GestureDetector(
+                        onPanStart: (details) {
+                          // Ignore input while a finished letter is shown.
+                          if (_letterComplete) return;
+                          final Offset designPos =
+                              (details.localPosition - Offset(dx, dy)) / scale;
+                          setState(() {
+                            _userStroke = [designPos];
+                            _showHelp = false;
+                          });
+                        },
+                        onPanUpdate: (details) {
+                          if (_letterComplete) return;
+                          final Offset designPos =
+                              (details.localPosition - Offset(dx, dy)) / scale;
+                          setState(() {
+                            _userStroke.add(designPos);
+                          });
+                        },
+                        onPanEnd: (details) async {
+                          if (_letterComplete) return;
+                          await _processUserStroke();
+                        },
+                        child: AnimatedBuilder(
+                          animation: _helpAnimationController,
+                          builder: (context, child) {
+                            return CustomPaint(
+                              size: Size(
+                                constraints.maxWidth,
+                                constraints.maxHeight,
+                              ),
+                              painter: CheckpointPainter(
+                                letter: letter!,
+                                strokeCheckpoints:
+                                    currentStrokeIndex <
+                                            strokeCheckpointsList.length
+                                        ? strokeCheckpointsList[currentStrokeIndex]
+                                        : null,
+                                userStroke: _userStroke,
+                                completedStrokes: _completedStrokes,
+                                scale: scale,
+                                dx: dx,
+                                dy: dy,
+                                showHelp: _showHelp,
+                                helpProgress: _helpAnimationController.value,
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 100),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -671,17 +648,17 @@ class GameplayScreenState extends State<GameplayScreen>
   }
 
   bool _isStrokeValid(
-      List<Offset> stroke,
-      StrokeCheckpoints checkpoints,
-      double tolerance,
-      double maxDevTol,
-      ) {
+    List<Offset> stroke,
+    StrokeCheckpoints checkpoints,
+    double tolerance,
+    double maxDevTol,
+  ) {
     final List<Offset> expectedPoints = checkpoints.points;
     if (stroke.isEmpty) return false;
 
     // Check that the stroke starts near the expected start.
     if ((stroke.first - expectedPoints.first).distance > tolerance) {
-      if(kDebugMode) print("The stroke did not start at the right place");
+      if (kDebugMode) print("The stroke did not start at the right place");
       return false;
     }
 
@@ -696,7 +673,7 @@ class GameplayScreenState extends State<GameplayScreen>
       }
     }
     if (hitIndices.length != expectedPoints.length) {
-      if(kDebugMode) print("The stroke did not hit all checkpoints");
+      if (kDebugMode) print("The stroke did not hit all checkpoints");
       return false;
     }
 
@@ -705,7 +682,11 @@ class GameplayScreenState extends State<GameplayScreen>
     int lastHit = hitIndices.last;
     for (int i = lastHit; i < stroke.length; i++) {
       if ((stroke[i] - expectedPoints.last).distance > tolerance) {
-        if(kDebugMode) print("The stroke hit all checkpoints but contains lines to far away from checkpoints");
+        if (kDebugMode) {
+          print(
+            "The stroke hit all checkpoints but contains lines too far away from checkpoints",
+          );
+        }
         return false;
       }
     }
@@ -720,7 +701,9 @@ class GameplayScreenState extends State<GameplayScreen>
       for (int k = startIndex; k <= endIndex; k++) {
         final double d = distanceToSegment(stroke[k], p1, p2);
         if (d > maxDevTol) {
-          if(kDebugMode) print("The stroke deviates to far from the expected path");
+          if (kDebugMode) {
+            print("The stroke deviates too far from the expected path");
+          }
           return false;
         }
       }
@@ -742,8 +725,10 @@ double distanceToSegment(Offset p, Offset a, Offset b) {
 
 // Admin function to add new shapes (letter_stroke_paths)
 List<Offset> getEvenlyDistributedPointsDynamic(
-    List<Offset> points, double desiredSpacing,
-    {double snapThreshold = 10.0}) {
+  List<Offset> points,
+  double desiredSpacing, {
+  double snapThreshold = 10.0,
+}) {
   if (points.length < 2) return [];
   final Offset start = points.first;
   final Offset end = points.last;
@@ -767,12 +752,11 @@ List<Offset> getEvenlyDistributedPointsDynamic(
   const int resolution = 1000;
   final List<Offset> sampledPoints = List.generate(
     resolution + 1,
-        (i) => _catmullRom(points, i / resolution),
+    (i) => _catmullRom(points, i / resolution),
   );
   final List<double> cumulative = [0.0];
   for (int i = 1; i < sampledPoints.length; i++) {
-    final double dist =
-        (sampledPoints[i] - sampledPoints[i - 1]).distance;
+    final double dist = (sampledPoints[i] - sampledPoints[i - 1]).distance;
     cumulative.add(cumulative.last + dist);
   }
   final double totalLength = cumulative.last;
@@ -789,8 +773,7 @@ List<Offset> getEvenlyDistributedPointsDynamic(
     }
     final double segmentStart = cumulative[segmentIndex];
     final double segmentEnd = cumulative[segmentIndex + 1];
-    final double tLocal =
-        (target - segmentStart) / (segmentEnd - segmentStart);
+    final double tLocal = (target - segmentStart) / (segmentEnd - segmentStart);
     final Offset p0 = sampledPoints[segmentIndex];
     final Offset p1 = sampledPoints[segmentIndex + 1];
     final Offset interpolated = Offset(
@@ -821,12 +804,14 @@ Offset _catmullRom(List<Offset> points, double t) {
   final double u = segmentT;
   final double u2 = u * u;
   final double u3 = u2 * u;
-  final double x = 0.5 *
+  final double x =
+      0.5 *
       ((2 * p1.dx) +
           (-p0.dx + p2.dx) * u +
           (2 * p0.dx - 5 * p1.dx + 4 * p2.dx - p3.dx) * u2 +
           (-p0.dx + 3 * p1.dx - 3 * p2.dx + p3.dx) * u3);
-  final double y = 0.5 *
+  final double y =
+      0.5 *
       ((2 * p1.dy) +
           (-p0.dy + p2.dy) * u +
           (2 * p0.dy - 5 * p1.dy + 4 * p2.dy - p3.dy) * u2 +
@@ -867,10 +852,7 @@ class CheckpointPainter extends CustomPainter {
     // Draw the letter.
     final TextSpan span = TextSpan(
       text: letter,
-      style: GoogleFonts.poppins(
-        fontSize: 300,
-        color: Colors.grey.shade300,
-      ),
+      style: GoogleFonts.poppins(fontSize: 300, color: RetroColors.letter),
     );
     final TextPainter tp = TextPainter(
       text: span,
@@ -882,73 +864,14 @@ class CheckpointPainter extends CustomPainter {
     tp.paint(canvas, textPos);
 
     // Draw completed strokes.
-    if (completedStrokes.isNotEmpty) {
-      final Paint completedPaint = Paint()
-        ..color = const Color(0xFF32CD32) // LimeGreen
-        ..strokeWidth = 8
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
-      for (var stroke in completedStrokes) {
-        if (stroke.isNotEmpty) {
-          if (stroke.length == 1) {
-            final Paint fillPaint = Paint()
-              ..color = const Color(0xFF32CD32) // LimeGreen
-              ..style = PaintingStyle.fill;
-            canvas.drawCircle(stroke.first, 8.0, fillPaint);
-          } else {
-            final Path path = Path()..moveTo(stroke.first.dx, stroke.first.dy);
-            for (final Offset p in stroke.skip(1)) {
-              path.lineTo(p.dx, p.dy);
-            }
-            canvas.drawPath(path, completedPaint);
-          }
-        }
-      }
-    }
+    RetroPaint.drawCompletedStrokes(canvas, completedStrokes);
 
     // Draw the current stroke.
-    if (userStroke.isNotEmpty) {
-      final Paint strokePaint = Paint()
-        ..color = const Color(0xFF00BFFF) // DeepSkyBlue
-        ..strokeWidth = 8
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
-      final Path path = Path()..moveTo(userStroke.first.dx, userStroke.first.dy);
-      for (final Offset p in userStroke.skip(1)) {
-        path.lineTo(p.dx, p.dy);
-      }
-      canvas.drawPath(path, strokePaint);
-    }
+    RetroPaint.drawUserStroke(canvas, userStroke);
 
     // Draw expected stroke guidance if help is requested.
     if (strokeCheckpoints != null && showHelp) {
-      final List<Offset> points = strokeCheckpoints!.points;
-      for (int i = 0; i < points.length; i++) {
-        final Color color = i == 0
-            ? const Color(0xFF39FF14)
-            : (i == points.length - 1 ? const Color(0xFFFF073A) : Colors.grey);
-        final double radius = (i == 0 || i == points.length - 1) ? 8.0 : 4.0;
-        final Paint checkpointPaint = Paint()..color = color;
-        canvas.drawCircle(points[i], radius, checkpointPaint);
-      }
-
-      final Paint helpPaint = Paint()
-        ..color = Colors.amberAccent.shade700
-        ..strokeWidth = 4
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
-
-      final Path fullPath = Path()..moveTo(points.first.dx, points.first.dy);
-      for (final Offset p in points.skip(1)) {
-        fullPath.lineTo(p.dx, p.dy);
-      }
-
-      final Path animatedPath = Path();
-      for (final metric in fullPath.computeMetrics()) {
-        final double length = metric.length * helpProgress;
-        animatedPath.addPath(metric.extractPath(0, length), Offset.zero);
-      }
-      canvas.drawPath(animatedPath, helpPaint);
+      RetroPaint.drawHint(canvas, strokeCheckpoints!.points, helpProgress);
     }
     canvas.restore();
   }
