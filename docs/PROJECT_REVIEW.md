@@ -14,6 +14,7 @@ The five screens are the landing menu, gameplay, animated instructions, settings
 | `lib/screens/gameplay_screen.dart` | Letter selection, scoring, hints and messages |
 | `lib/screens/instruction_screen.dart` | Tutorial steps, with its own single-stroke L |
 | `lib/widgets/tracing_canvas.dart` | Tracing surface: design-space scaling, gestures and painting, shared by game and tutorial |
+| `lib/widgets/character_sprite.dart` | The mascot on the menu: blinks by swapping in `game_character_blink.png`, and bobs by one sprite pixel |
 | `lib/models/stroke_validator.dart` | Checks traced strokes against checkpoints; joins strokes drawn in one go |
 | `lib/models/game_rules.dart` | Bonus, penalty, hint cost and the streak formula |
 | `lib/models/stroke_checkpoint.dart` | Ordered checkpoint model |

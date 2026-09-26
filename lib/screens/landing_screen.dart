@@ -4,6 +4,7 @@ import 'package:letterchamp/services/settings_service.dart';
 import 'package:letterchamp/services/sound_effects_manager.dart';
 import 'package:letterchamp/theme/retro_theme.dart';
 import 'package:letterchamp/theme/retro_widgets.dart';
+import 'package:letterchamp/widgets/character_sprite.dart';
 
 /// The main menu.
 class LandingScreen extends StatefulWidget {
@@ -104,12 +105,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                   textAlign: TextAlign.center,
                                 ),
                                 const Spacer(),
-                                Image.asset(
-                                  'assets/images/game_character.png',
-                                  width: 200,
-                                  height: 200,
-                                  fit: BoxFit.contain,
-                                ),
+                                const CharacterSprite(size: 200),
                                 const Spacer(),
                                 _menuButton(
                                   swedish ? 'Spela nu' : 'Play Now',

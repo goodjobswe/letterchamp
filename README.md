@@ -97,7 +97,7 @@ The same checks and a debug APK build run in GitHub Actions for every push and p
 The main parts of the code are:
 
 - `lib/screens/` — menus, settings, gameplay, and the tutorial.
-- `lib/widgets/tracing_canvas.dart` — the surface letters are traced on, shared by the game and the tutorial.
+- `lib/widgets/` — the surface letters are traced on, shared by the game and the tutorial, and the animated mascot.
 - `lib/theme/` — the palette, pixel-font text styles, and the retro widgets every screen is built from.
 - `lib/data/` — ordered tracing checkpoints for each character, and the tool used to author them.
 - `lib/models/` — the checkpoint model, stroke validation, and the scoring rules.

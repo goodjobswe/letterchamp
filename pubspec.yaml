@@ -92,6 +92,7 @@ flutter:
     - assets/fonts/
     - assets/images/game_bg.png
     - assets/images/game_character.png
+    - assets/images/game_character_blink.png
     - assets/audio/background_music.mp3
     - assets/audio/button_click.wav
     - assets/audio/cancel.wav
