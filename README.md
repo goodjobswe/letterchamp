@@ -6,6 +6,8 @@ Letter Champ is a Flutter game for tracing letters and numbers, with a retro loo
 
 The game plays offline. Settings, high scores, and your longest streak are saved on your device; no account is required.
 
+Letter Champ started as a small project for my son, to help him practice drawing letters in the right order and direction. It is a hobby project with no commercial plans, shared here in case it helps another child, or another parent learning Flutter.
+
 ## Screenshots
 
 <table>
@@ -116,4 +118,4 @@ The fonts are Press Start 2P and Poppins under the Open Font License; their noti
 
 ## License
 
-The source code is released under the [MIT License](LICENSE). The license covers the code only: the character, background artwork, sound effects and music are not included and may not be reused or redistributed outside this project without permission from their respective owners.
+The source code is released under the [MIT License](LICENSE), so anyone can learn from it or build on it. The license covers the code only: the character, background artwork, sound effects and music are not included and may not be reused or redistributed outside this project without permission from their respective owners.
