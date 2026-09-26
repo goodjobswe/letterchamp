@@ -46,7 +46,7 @@ flutter_launcher_icons: # Run with "dart run flutter_launcher_icons"
   ios: true
   image_path: "assets/images/app_icon.png"  # Path to your app icon
   adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
-  adaptive_icon_background: "assets/images/app_icon_background.png"
+  adaptive_icon_background: "#2e2b2f"
   adaptive_icon_foreground_inset: 24
   remove_alpha_ios: true
 
@@ -57,6 +57,8 @@ flutter_native_splash: # Run with "dart run flutter_native_splash:create"
   #branding_bottom_padding: 128
   android_12:
     color: "#2e2b2f"
+    # Use the adaptive launcher icon, with its background matching the screen.
+    icon_background_color: "#2e2b2f"
     branding: assets/images/branding.png
   web: false
 

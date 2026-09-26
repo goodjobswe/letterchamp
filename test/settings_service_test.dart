@@ -8,7 +8,7 @@ void main() {
 
   test('first launch uses the expected game and audio defaults', () async {
     final settings = SettingsService();
-    expect(await settings.getLanguage(), 'sv');
+    expect(await settings.getLanguage(), 'en');
     expect(await settings.getGameMode(), 'random');
     expect(await settings.getLetterOrder(), 'random');
     expect(await settings.getMusicEnabled(), isTrue);
@@ -21,7 +21,7 @@ void main() {
   test('settings and records survive creating a new service', () async {
     final settings = SettingsService();
     await settings.init();
-    await settings.setLanguage('en');
+    await settings.setLanguage('sv');
     await settings.setGameMode('lowercase');
     await settings.setLetterOrder('alphabetic');
     await settings.setMusicEnabled(false);
@@ -30,7 +30,7 @@ void main() {
     await settings.setHighScore(125);
     await settings.setHighestStreak(8);
     final reloaded = SettingsService();
-    expect(await reloaded.getLanguage(), 'en');
+    expect(await reloaded.getLanguage(), 'sv');
     expect(await reloaded.getGameMode(), 'lowercase');
     expect(await reloaded.getLetterOrder(), 'alphabetic');
     expect(await reloaded.getMusicEnabled(), isFalse);

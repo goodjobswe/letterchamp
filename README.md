@@ -34,7 +34,7 @@ Screenshots are from the March 2025 version. [View all screenshots](assets/scree
 
 ## How to play
 
-1. Open **Settings** to choose a language, letter case, order, and whether to include numbers. The default language is Swedish.
+1. Open **Settings** to choose a language, letter case, order, and whether to include numbers. The default language is English.
 2. Try **Instructions** for a guided introduction, or choose **Play Now** to start tracing.
 3. Draw each letter in the expected stroke order and direction. Correct letters earn points; an incorrect stroke costs 2 points and resets your streak.
 4. Tap the question mark when you need a guide. The first hint in each game is free; later hints cost 5 points when you have enough points.
