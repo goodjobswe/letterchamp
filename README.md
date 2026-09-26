@@ -44,7 +44,11 @@ Screenshots are from the September 2026 version on an Android 15 emulator. [View
 
 ## Get the app
 
-There is no published build yet, so the only way to play is to build the app from source as described below. A signed Android release on this repository's Releases page is the planned first distribution channel; see the [project review](docs/PROJECT_REVIEW.md) for what that still needs.
+**Android:** download the newest `letterchamp-<version>.apk` from the [Releases page](https://github.com/goodjobswe/letterchamp/releases) and open it on the phone. Android asks once to allow installs from that source. Each release also carries a `.sha256` checksum. The app is not on Google Play.
+
+**iOS:** no build is published. The native project is included, but it has not been built yet; see the [development guide](docs/DEVELOPMENT.md).
+
+Or build from source as described below.
 
 ## Run locally
 
@@ -112,7 +116,7 @@ Issues and pull requests are welcome. For a bug report, include the device and O
 
 ## Credits
 
-Credit: https://www.FesliyanStudios.com Background Music. The background music is used under Fesliyan Studios' free license, which requires this credit and does not allow monetized use.
+Credit: https://www.FesliyanStudios.com Background Music. The background music is used under Fesliyan Studios' free license, which requires this credit and does not allow monetized use. The sound effects most likely come from the same site, but their source was not recorded when they were added, so that cannot be stated with certainty.
 
 The fonts are Press Start 2P and Poppins under the Open Font License; their notices are listed in [assets/fonts](assets/fonts/README.md).
 

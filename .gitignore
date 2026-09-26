@@ -44,3 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 /assets/images/src/
+
+# Release signing key and its passwords: never commit these.
+/android/key.properties
+*.jks
+*.keystore

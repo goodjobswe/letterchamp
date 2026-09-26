@@ -85,7 +85,41 @@ dart run flutter_launcher_icons
 
 Both generators are dev dependencies; they are not compiled into the app.
 
-The Android release configuration currently uses debug signing. A debug build is suitable for local testing; store distribution requires a separately configured release signing setup. Keep signing secrets outside Git.
+## Releasing an APK
+
+Release builds are signed with an upload key that is not in the repository. `android/app/build.gradle.kts` reads it from `android/key.properties`; when that file is missing, a release build falls back to the debug key, which is fine for local testing but must never be distributed.
+
+The key was created once with the JDK's `keytool` and lives in `android/app/upload-keystore.jks`, with its passwords in `android/key.properties`. Both are ignored by git. Keep a backup of both outside the repository: an app signed with a different key cannot update an installed one, so losing the key means every player has to uninstall before the next version.
+
+To create a new key on another machine:
+
+```powershell
+keytool -genkeypair -v -keystore android\app\upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+```
+
+and write `android/key.properties`:
+
+```
+storePassword=<password>
+keyPassword=<password>
+keyAlias=upload
+storeFile=upload-keystore.jks
+```
+
+A local signed build is then:
+
+```powershell
+flutter build apk --release
+```
+
+GitHub Actions publishes releases. The key is stored as the repository secrets `ANDROID_KEYSTORE_BASE64` (the `.jks` file, base64 encoded), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_PASSWORD` and `ANDROID_KEY_ALIAS`. To release: bump `version` in `pubspec.yaml` (the number after `+` must grow every release), commit, then push a tag named after the version:
+
+```powershell
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+The release workflow in `.github/workflows/release.yml` builds the signed APK, attaches it and a checksum to a GitHub Release named after the tag, and writes release notes from the commits since the previous tag.
 
 ## Code style and CI
 
