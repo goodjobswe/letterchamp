@@ -80,11 +80,11 @@ Letter Champ was revived in September 2026 after a development pause. The build 
 
 | Platform | Status |
 | --- | --- |
-| Android | Debug build verified on an emulator through all screens. Physical-device testing and release signing remain. |
+| Android | Debug build verified on an emulator through all screens. Signed release APKs are published on the Releases page. Physical-device testing remains. |
 | iOS | Native project included; build and runtime testing still needed on a Mac with Xcode. |
 | Web and desktop | No app runners included. |
 
-The next work covers a newer Flutter baseline with the major package upgrades, widget tests for gameplay, release signing, and iOS verification. The [project review](docs/PROJECT_REVIEW.md) documents the findings and what is still open.
+The next work covers a newer Flutter baseline with the major package upgrades, widget tests for gameplay, physical-device testing, and iOS verification. The [project review](docs/PROJECT_REVIEW.md) documents the findings and what is still open.
 
 ## Development
 
