@@ -12,9 +12,9 @@ Letter Champ started as a small project for my son, to help him practice drawing
 
 <table>
   <tr>
-    <td align="center"><img src="assets/screenshots/home.jpg" alt="Letter Champ main menu with a pixel-art character, sunset background and flat retro buttons" width="240"></td>
-    <td align="center"><img src="assets/screenshots/how-to-play.jpg" alt="Tutorial with the first stroke of the letter A traced in green and a dashed guide with checkpoint squares for the second stroke" width="240"></td>
-    <td align="center"><img src="assets/screenshots/tracing.jpg" alt="Completed letter A with green tracing strokes and a score message" width="240"></td>
+    <td align="center" width="33%"><img src="assets/screenshots/home.jpg" alt="Letter Champ main menu with a pixel-art character, sunset background and flat retro buttons" width="240"></td>
+    <td align="center" width="33%"><img src="assets/screenshots/how-to-play.jpg" alt="Tutorial with the first stroke of the letter A traced in green and a dashed guide with checkpoint squares for the second stroke" width="240"></td>
+    <td align="center" width="33%"><img src="assets/screenshots/tracing.jpg" alt="Completed letter A with green tracing strokes and a score message" width="240"></td>
   </tr>
   <tr>
     <td align="center">Main menu</td>
