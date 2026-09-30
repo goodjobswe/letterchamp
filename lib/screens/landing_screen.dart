@@ -127,6 +127,11 @@ class _LandingScreenState extends State<LandingScreen> {
                                   swedish ? 'Inställningar' : 'Settings',
                                   '/settings',
                                 ),
+                                const SizedBox(height: 15),
+                                _menuButton(
+                                  swedish ? 'Om spelet' : 'About',
+                                  '/about',
+                                ),
                                 const SizedBox(height: 32),
                               ],
                             ),

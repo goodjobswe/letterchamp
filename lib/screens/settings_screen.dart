@@ -259,17 +259,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 24),
-                                    // Wording required by the music's license.
-                                    Text(
-                                      'Credit: https://www.FesliyanStudios.com Background Music',
-                                      style: RetroText.style(
-                                        10,
-                                        color: RetroColors.mist,
-                                        shadow: false,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 16),
                                   ],
                                 ),
                               ),

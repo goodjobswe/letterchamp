@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'screens/about_screen.dart';
 import 'screens/gameplay_screen.dart';
 import 'screens/highscore_screen.dart';
 import 'screens/instruction_screen.dart';
@@ -47,6 +48,7 @@ class LetterChampApp extends StatelessWidget {
       routes: {
         '/': (context) => const LandingScreen(),
         '/settings': (context) => const SettingsScreen(),
+        '/about': (context) => const AboutScreen(),
         '/gameplay': (context) => const GameplayScreen(),
         '/highscore': (context) => const HighscoreScreen(),
         '/instructions': (context) => const InstructionScreen(),
