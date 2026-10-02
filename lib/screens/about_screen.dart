@@ -111,8 +111,8 @@ class _AboutScreenState extends State<AboutScreen> {
                                         const SizedBox(height: 24),
                                         Text(
                                           _swedish
-                                              ? 'Jag gjorde Letter Champ för min son, så att han kunde öva på att skriva bokstäver i rätt ordning och riktning.\n\nDet är ett hobbyprojekt som jag delar i hopp om att fler barn får glädje av det.'
-                                              : 'I made Letter Champ for my son to practice drawing letters in the right order and direction.\n\nIt is a hobby project, shared in the hope that it helps other children learn, too.',
+                                              ? 'Jag gjorde Letter Champ för min son, så att han kunde öva på att skriva bokstäver i rätt ordning och riktning.\n\nJag delar det i hopp om att fler barn får glädje av det.'
+                                              : 'I made Letter Champ for my son to practice drawing letters in the right order and direction.\n\nI share it in the hope that it helps other children learn, too.',
                                           style: RetroText.style(
                                             12,
                                           ).copyWith(height: 1.7),
